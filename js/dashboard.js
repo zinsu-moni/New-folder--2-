@@ -36,8 +36,7 @@ async function loadDashboardData() {
         dashboardData = await api.getDashboardStats();
         console.log('[dashboard.js] Raw dashboardData:', dashboardData);
 
-        // Render a small debug toggle to inspect raw response (helpful during troubleshooting)
-        renderDashboardDebugPanel(dashboardData);
+    // Debug panel removed: raw dashboard data toggle intentionally hidden in production
         
         // Update balance cards
         updateBalanceCards(dashboardData);
@@ -107,36 +106,7 @@ function setupWithdrawLinks() {
     }
 }
 
-// Debug helper: show a toggleable panel with the raw dashboard JSON
-function renderDashboardDebugPanel(data) {
-    try {
-        // Remove existing panel
-        const existing = document.getElementById('dashboard-debug-panel');
-        if (existing) existing.remove();
-
-        const container = document.createElement('div');
-        container.id = 'dashboard-debug-panel';
-        container.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9999;max-width:420px;font-family:monospace;';
-
-        const button = document.createElement('button');
-        button.textContent = 'View raw dashboard data';
-        button.style.cssText = 'background:#111827;color:white;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px;';
-
-        const pre = document.createElement('pre');
-        pre.style.cssText = 'display:none;margin-top:8px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#f3f4f6;border-radius:6px;padding:10px;border:1px solid #e5e7eb;';
-        pre.textContent = JSON.stringify(data, null, 2);
-
-        button.addEventListener('click', () => {
-            pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
-        });
-
-        container.appendChild(button);
-        container.appendChild(pre);
-        document.body.appendChild(container);
-    } catch (e) {
-        console.error('[dashboard.js] Failed to render debug panel:', e);
-    }
-}
+// Debug helper removed: raw dashboard data panel disabled
 
 async function loadUserProfile() {
     try {
@@ -279,14 +249,7 @@ async function loadReferralInfo() {
             // ignore and fallback
         }
         
-        // Render referral/profile debug info on the page for troubleshooting
-        try {
-            const profile = await api.getProfile();
-            renderReferralDebugPanel(referralInfo, profile);
-        } catch (e) {
-            // still render referral info if profile fails
-            renderReferralDebugPanel(referralInfo, null);
-        }
+        // Referral debug panel removed: debug info hidden in production
 
         // Update referral link
         const referralLinkEl = document.getElementById('referralLink');
@@ -315,35 +278,7 @@ async function loadReferralInfo() {
     }
 }
 
-function renderReferralDebugPanel(referralInfo, profile) {
-    try {
-        // Remove existing panel
-        const existing = document.getElementById('referral-debug-panel');
-        if (existing) existing.remove();
-
-        const container = document.createElement('div');
-        container.id = 'referral-debug-panel';
-        container.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:9999;max-width:420px;font-family:monospace;';
-
-        const button = document.createElement('button');
-        button.textContent = 'View referral debug info';
-        button.style.cssText = 'background:#111827;color:white;border:none;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px;';
-
-        const pre = document.createElement('pre');
-        pre.style.cssText = 'display:none;margin-top:8px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;background:#f3f4f6;border-radius:6px;padding:10px;border:1px solid #e5e7eb;';
-        pre.textContent = JSON.stringify({ referral: referralInfo, profile: profile }, null, 2);
-
-        button.addEventListener('click', () => {
-            pre.style.display = pre.style.display === 'none' ? 'block' : 'none';
-        });
-
-        container.appendChild(button);
-        container.appendChild(pre);
-        document.body.appendChild(container);
-    } catch (e) {
-        console.error('[dashboard.js] Failed to render referral debug panel:', e);
-    }
-}
+// Referral debug panel removed
 
 function setupReferralLinkCopy() {
     // The dashboard HTML uses id="copyBtn" for the copy button
