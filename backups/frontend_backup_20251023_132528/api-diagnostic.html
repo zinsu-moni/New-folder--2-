@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Diagnostic Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; }
+        .container { margin-bottom: 30px; }
+        .card { border: 1px solid #ddd; border-radius: 5px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { background-color: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #2980b9; }
+        pre { background-color: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .result-container { margin-top: 20px; }
+        .headers { margin-bottom: 10px; }
+        .token-info { background-color: #e8f4f8; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+        .status.ok { color: #27ae60; }
+        .status.error { color: #e74c3c; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>API Diagnostic Tool</h1>
+    
+    <div class="card">
+        <h2>API Configuration</h2>
+        <div class="token-info">
+            <div id="tokenStatus">Checking authentication token...</div>
+        </div>
+        <div class="input-group">
+            <label for="baseUrl">API Base URL:</label>
+            <input type="text" id="baseUrl" value="http://localhost:8000/api" />
+        </div>
+        <div class="input-group">
+            <label for="authToken">Authentication Token:</label>
+            <input type="text" id="authToken" placeholder="Paste your JWT token here" />
+            <button onclick="saveToken()">Save Token</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Test API Endpoints</h2>
+        <div class="input-group">
+            <label for="endpoint">API Endpoint:</label>
+            <input type="text" id="endpoint" value="/admin/dashboard" placeholder="e.g., /admin/users" />
+        </div>
+        <div class="input-group">
+            <label for="method">HTTP Method:</label>
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="requestBody">Request Body (JSON):</label>
+            <textarea id="requestBody" rows="4" style="width: 100%;" placeholder='{"key": "value"}'></textarea>
+        </div>
+        <button onclick="testEndpoint()">Send Request</button>
+        
+        <div class="result-container" id="results" style="display: none;">
+            <h3>Response:</h3>
+            <div class="status" id="status"></div>
+            <div class="headers" id="responseHeaders"></div>
+            <pre id="responseData"></pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Common Endpoints</h2>
+        <table>
+            <tr>
+                <th>Endpoint</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+            <tr>
+                <td>/admin/dashboard</td>
+                <td>Get admin dashboard data</td>
+                <td><button onclick="loadEndpoint('/admin/dashboard')">Try</button></td>
+            </tr>
+            <tr>
+                <td>/admin/users</td>
+                <td>Get all users</td>
+                <td><button onclick="loadEndpoint('/admin/users')">Try</button></td>
+            </tr>
+            <tr>
+                <td>/users</td>
+                <td>Get users (direct endpoint)</td>
+                <td><button onclick="loadEndpoint('/users')">Try</button></td>
+            </tr>
+            <tr>
+                <td>/admin/withdrawals</td>
+                <td>Get withdrawal requests</td>
+                <td><button onclick="loadEndpoint('/admin/withdrawals')">Try</button></td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        // Check if token exists on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('affluence_token');
+            const tokenStatus = document.getElementById('tokenStatus');
+            const authTokenInput = document.getElementById('authToken');
+            
+            if (token) {
+                tokenStatus.innerHTML = `<span class="success">✓ Token found in localStorage</span>`;
+                authTokenInput.value = token;
+                
+                // Try to parse the token to show expiration
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const exp = new Date(payload.exp * 1000);
+                    tokenStatus.innerHTML += `<br>Expires: ${exp.toLocaleString()}`;
+                    
+                    if (payload.sub) {
+                        tokenStatus.innerHTML += `<br>User ID: ${payload.sub}`;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse token:', e);
+                }
+            } else {
+                tokenStatus.innerHTML = `<span class="error">✗ No token found in localStorage</span>`;
+            }
+        });
+        
+        // Save token to localStorage
+        function saveToken() {
+            const token = document.getElementById('authToken').value.trim();
+            if (token) {
+                localStorage.setItem('affluence_token', token);
+                alert('Token saved to localStorage');
+                location.reload();
+            } else {
+                alert('Please enter a valid token');
+            }
+        }
+        
+        // Load an endpoint into the form
+        function loadEndpoint(endpoint) {
+            document.getElementById('endpoint').value = endpoint;
+            document.getElementById('method').value = 'GET';
+            document.getElementById('requestBody').value = '';
+            document.getElementById('results').style.display = 'none';
+        }
+        
+        // Test an endpoint
+        async function testEndpoint() {
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const endpoint = document.getElementById('endpoint').value.trim();
+            const method = document.getElementById('method').value;
+            const token = document.getElementById('authToken').value.trim() || localStorage.getItem('affluence_token');
+            let body = null;
+            
+            // Prepare results container
+            const resultsContainer = document.getElementById('results');
+            const statusElement = document.getElementById('status');
+            const headersElement = document.getElementById('responseHeaders');
+            const dataElement = document.getElementById('responseData');
+            
+            resultsContainer.style.display = 'block';
+            statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending request...';
+            headersElement.innerHTML = '';
+            dataElement.textContent = '';
+            
+            // Prepare request body for POST/PUT
+            if ((method === 'POST' || method === 'PUT') && document.getElementById('requestBody').value.trim()) {
+                try {
+                    body = JSON.parse(document.getElementById('requestBody').value.trim());
+                } catch (e) {
+                    statusElement.innerHTML = `<span class="error">Invalid JSON in request body: ${e.message}</span>`;
+                    return;
+                }
+            }
+            
+            // Build request options
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            
+            // Add token if available
+            if (token) {
+                options.headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            // Add body if needed
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            
+            // Build full URL
+            const url = `${baseUrl}${endpoint}`;
+            
+            try {
+                console.log(`Sending ${method} request to ${url}`);
+                const startTime = performance.now();
+                const response = await fetch(url, options);
+                const endTime = performance.now();
+                
+                // Display response status
+                const duration = Math.round(endTime - startTime);
+                statusElement.className = response.ok ? 'status ok' : 'status error';
+                statusElement.innerHTML = `${response.status} ${response.statusText} (${duration}ms)`;
+                
+                // Display headers
+                let headerHtml = '<strong>Response Headers:</strong><br>';
+                response.headers.forEach((value, key) => {
+                    headerHtml += `<strong>${key}:</strong> ${value}<br>`;
+                });
+                headersElement.innerHTML = headerHtml;
+                
+                // Try to parse response as JSON
+                try {
+                    const data = await response.json();
+                    dataElement.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    // If not JSON, show as text
+                    const text = await response.text();
+                    dataElement.textContent = text;
+                }
+            } catch (error) {
+                statusElement.className = 'status error';
+                statusElement.innerHTML = `Error: ${error.message}`;
+                dataElement.textContent = error.stack;
+            }
+        }
+    </script>
+</body>
+</html>

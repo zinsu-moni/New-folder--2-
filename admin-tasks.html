@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+    <link rel="stylesheet" href="css/admin-mobile.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item active">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="admin-articles.html" class="nav-item">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Articles</span>
+                    </a>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-cards.html" class="nav-item">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cards</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-logs.html" class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">Admin User</span>
+                        <span class="user-role" id="userRole">Administrator</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">Task Management</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="showTaskTypeModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Update Click-to-Earn Task</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="page-description">
+                    Manage click-to-earn tasks and view task completion stats.
+                </p>
+            </div>
+
+            <div class="content-area">
+                <!-- Task Info Card -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Current Click-to-Earn Task</h2>
+                    </div>
+                    <div id="taskContent" class="card-body">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Statistics -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Task Statistics</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <div class="stat-details">
+                                    <h3 class="stat-value" id="totalTasks">--</h3>
+                                    <p class="stat-label">Tasks Available</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-details">
+                                    <h3 class="stat-value" id="completedTasks">--</h3>
+                                    <p class="stat-label">Tasks Completed</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div class="stat-details">
+                                    <h3 class="stat-value" id="totalEarnings">--</h3>
+                                    <p class="stat-label">Total Paid Out</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Regular Task Management -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Regular Tasks</h2>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="openAddTaskModal()">
+                                <i class="fas fa-plus"></i> Add Task
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="regularTasksCardBody">
+                        <div id="regularTasksContent">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add / Edit Task Modal -->
+                <div id="taskModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title" id="taskModalTitle">Add Task</h3>
+                            <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" id="taskTitle" class="form-control" placeholder="Task title">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea id="taskDescription" class="form-control" placeholder="Short description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount (₦)</label>
+                                <input type="number" id="taskAmount" class="form-control" placeholder="500">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount for Alpha users (optional)</label>
+                                <input type="number" id="taskAmountAlpha" class="form-control" placeholder="leave empty to use default">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Amount for Mega users (optional)</label>
+                                <input type="number" id="taskAmountMega" class="form-control" placeholder="leave empty to use default">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Task Type</label>
+                                <select id="taskType" class="form-control">
+                                    <option value="link">Link</option>
+                                    <option value="text">Text</option>
+                                    <option value="image">Image</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Visibility Tier</label>
+                                <select id="taskTier" class="form-control">
+                                    <option value="both">Both (visible to all tiers)</option>
+                                    <option value="alpha">Alpha (alpha-only users)</option>
+                                    <option value="mega">Mega (mega users; mega users also see alpha)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Task URL (optional)</label>
+                                <input type="url" id="taskUrl" class="form-control" placeholder="https://example.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon (FontAwesome class)</label>
+                                <input type="text" id="taskIcon" class="form-control" placeholder="fas fa-link">
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                                <input type="checkbox" id="taskActive" checked>
+                                <label for="taskActive">Active</label>
+                            </div>
+                            <input type="hidden" id="taskId">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="saveRegularTask()">Save</button>
+                            <button class="btn" onclick="closeTaskModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Task Type Selection Modal -->
+    <div id="taskTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Update Click-to-Earn Task</h3>
+                <button class="modal-close" onclick="closeTypeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Task Link</label>
+                    <input 
+                        type="url" 
+                        id="taskLink" 
+                        required 
+                        placeholder="https://example.com"
+                        class="form-control"
+                    >
+                </div>
+                <p style="margin-bottom: 1.5rem; color: var(--text-light); text-align: center;">
+                    Choose the task type:
+                </p>
+                <div style="display: grid; gap: 1rem;">
+                    <button onclick="saveTaskWithType('mega')" class="btn btn-primary" style="padding: 1.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-gem"></i> Mega - ₦500
+                    </button>
+                    <button onclick="saveTaskWithType('alpha')" class="btn" style="background: var(--success); color: white; padding: 1.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-star"></i> Alpha - ₦2000
+                    </button>
+                    <button onclick="closeTypeModal()" class="btn" style="background: var(--border); color: var(--text);">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        let currentTaskLink = '';
+
+        async function loadDashboardData() {
+            try {
+                const dashboardStats = await adminAPI.getDashboard();
+                // Populate task stats with placeholders for now - in a real app, this would
+                // fetch actual task statistics from the backend
+                document.getElementById('totalTasks').textContent = '1';
+                document.getElementById('completedTasks').textContent = dashboardStats.total_articles_completed || '0';
+                document.getElementById('totalEarnings').textContent = '₦' + formatCurrency(dashboardStats.total_earnings || 0);
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                showToast('Failed to load statistics', 'error');
+            }
+        }
+
+        async function loadTask() {
+            try {
+                // Get the task - handle both array and single object response formats
+                console.log('Fetching click-to-earn task...');
+                const response = await adminAPI.getClickToEarnTasks(0, 1);
+                console.log('Response from getClickToEarnTasks:', response);
+                
+                // The API might return either a single task object or an array of tasks
+                // Handle both cases correctly
+                let task = null;
+                
+                if (Array.isArray(response)) {
+                    // Handle array response
+                    task = response.length > 0 ? response[0] : null;
+                } else if (response && typeof response === 'object') {
+                    // Handle single object response
+                    task = response;
+                }
+                
+                if (!task) {
+                    // No task found, let's create one instead of showing an error
+                    console.log('No task found, creating a default one...');
+                    
+                    // Prepare default task data
+                    const defaultTaskData = {
+                        link: 'https://example.com',
+                        task_type: 'mega',
+                        amount: 500.0
+                    };
+                    
+                    // Create the task
+                    try {
+                        task = await adminAPI.updateClickToEarnTask(defaultTaskData);
+                        console.log('Default task created:', task);
+                        
+                        // Show success message
+                        showToast('Created default Click-to-Earn task', 'success');
+                    } catch (createError) {
+                        console.error('Failed to create default task:', createError);
+                        throw new Error("Couldn't create default task: " + createError.message);
+                    }
+                }
+                
+                const contentHtml = `
+                    <div style="display: grid; gap: 24px;">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label class="info-label">Task Type</label>
+                                <span class="badge ${task.task_type === 'mega' ? 'badge-primary' : 'badge-success'}" style="font-size: 14px; padding: 8px 16px;">
+                                    ${task.task_type === 'mega' ? '💎 Mega - ₦500' : '🌟 Alpha - ₦2000'}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Reward Amount</label>
+                                <span class="info-value info-value-highlight">₦${task.amount.toFixed(2)}</span>
+                            </div>
+                            <div class="info-item full-width">
+                                <label class="info-label">Current Link</label>
+                                <a href="${task.link}" target="_blank" class="link-box">
+                                    ${task.link}
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                            <div class="info-item">
+                                <label class="info-label">Last Updated</label>
+                                <span class="info-value info-value-muted">${new Date(task.updated_at).toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div class="action-panel">
+                            <button onclick="document.getElementById('taskLink').value = '${task.link}'; showTaskTypeModal()" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-edit"></i> Update Task
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('taskContent').innerHTML = contentHtml;
+            } catch (error) {
+                console.error('Error loading task:', error);
+                document.getElementById('taskContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="empty-state-title">Failed to Load Task</h3>
+                        <p class="empty-state-description">${error.message || 'An error occurred while loading task data'}</p>
+                        <button class="btn btn-primary" onclick="loadTask()">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function showTaskTypeModal() {
+            const input = document.getElementById('taskLink').value;
+            console.log('Task link input value:', input);
+            
+            // Validate and format the URL
+            const validation = validateAndFormatUrl(input);
+            
+            if (!validation.isValid) {
+                console.error('URL validation failed:', validation.error);
+                showToast('Please enter a valid URL (e.g., https://example.com)', 'error');
+                return;
+            }
+            
+            // Update the input field with the properly formatted URL
+            document.getElementById('taskLink').value = validation.formattedUrl;
+            console.log('Valid URL:', validation.formattedUrl);
+            
+            // Store the validated URL
+            currentTaskLink = validation.formattedUrl;
+            openModal('taskTypeModal');
+        }
+
+        function closeTypeModal() {
+            closeModal('taskTypeModal');
+            currentTaskLink = '';
+        }
+
+        async function saveTaskWithType(taskType) {
+            try {
+                const amount = taskType === 'mega' ? 500.0 : 2000.0;
+                
+                // Make sure we have a valid URL one more time
+                const validation = validateAndFormatUrl(currentTaskLink);
+                if (!validation.isValid) {
+                    console.error('URL validation failed on save:', validation.error);
+                    throw new Error(validation.error);
+                }
+                
+                // Use the formatted URL
+                currentTaskLink = validation.formattedUrl;
+                
+                const taskData = {
+                    link: currentTaskLink,
+                    task_type: taskType.toLowerCase(),  // Ensure lowercase to match enum
+                    amount: amount
+                };
+
+                console.log('Sending task update with data:', JSON.stringify(taskData, null, 2));
+                
+                // Explicitly log the URL we're submitting
+                console.log('Final URL being sent:', taskData.link);
+                
+                // API call - with explicit error handling
+                let response;
+                try {
+                    response = await adminAPI.updateClickToEarnTask(taskData);
+                    console.log('Task update response:', response);
+                } catch (apiError) {
+                    console.error('API error details:', apiError);
+                    
+                    // More specific handling for fetch-related errors
+                    if (apiError.status === 422) {
+                        throw new Error('Server rejected the data format. Check URL format and task type.');
+                    }
+                    throw apiError;  // Rethrow for general error handler
+                }
+                
+                closeTypeModal();
+                await loadTask();  // Wait for reload to complete
+                
+                showToast(
+                    `Task updated successfully! Type: ${taskType.toUpperCase()} | Amount: ₦${amount.toFixed(2)}`,
+                    'success'
+                );
+            } catch (error) {
+                console.error('Error updating task:', error);
+                let errorMessage = error.message || 'Unknown error';
+                
+                // More specific error handling based on common issues
+                if (error.data) {
+                    console.error('Error data:', error.data);
+                    
+                    // Handle validation errors
+                    if (error.data.detail && Array.isArray(error.data.detail)) {
+                        // Format Pydantic validation errors nicely
+                        const validationErrors = error.data.detail.map(e => 
+                            `${e.loc.join('.')} - ${e.msg}`
+                        ).join('; ');
+                        errorMessage = `Validation error: ${validationErrors}`;
+                    } else if (error.data.detail) {
+                        errorMessage = error.data.detail;
+                    }
+                } else if (error.status) {
+                    errorMessage = `Server error (${error.status}): ${error.statusText || errorMessage}`;
+                } else if (errorMessage.includes('Network Error')) {
+                    errorMessage = 'Network error. Check your internet connection.';
+                }
+                
+                showToast('Failed to update task: ' + errorMessage, 'error');
+            }
+        }
+
+        // ------- Regular Tasks management -------
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        async function loadRegularTasks() {
+            const container = document.getElementById('regularTasksContent');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            try {
+                const tasks = await adminAPI.getTasks(0, 200);
+                renderRegularTasks(tasks || []);
+            } catch (err) {
+                console.error('Failed to load regular tasks:', err);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3 class="empty-state-title">Failed to load tasks</h3>
+                        <p class="empty-state-description">${err.message || 'An error occurred'}</p>
+                        <button class="btn btn-primary" onclick="loadRegularTasks()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderRegularTasks(tasks) {
+            const container = document.getElementById('regularTasksContent');
+            if (!tasks || tasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3 class="empty-state-title">No tasks found</h3>
+                        <p class="empty-state-description">Create your first regular task using the Add Task button.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const rows = tasks.map(t => `
+                <div class="task-row" style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <div style="font-size:20px;color:var(--muted);">${t.icon ? `<i class="${t.icon}"></i>` : '<i class="fas fa-clipboard-list"></i>'}</div>
+                        <div>
+                            <div style="font-weight:600">${escapeHtml(t.title)}</div>
+                            <div style="font-size:13px;color:var(--text-light)">${escapeHtml(t.description || '')}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <div style="min-width:120px;text-align:right;font-weight:700">₦${Number(t.amount).toFixed(2)}</div>
+                        <button class="btn" onclick='openEditTaskModal(${t.id}, ${JSON.stringify(t).replace(/</g, '\u003c')})'>Edit</button>
+                        <button class="btn" style="background:#ef4444;color:white" onclick="deleteRegularTask(${t.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `<div class="tasks-list">${rows}</div>`;
+        }
+
+        function openAddTaskModal() {
+            document.getElementById('taskModalTitle').textContent = 'Add Task';
+            document.getElementById('taskId').value = '';
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            document.getElementById('taskAmount').value = '';
+            document.getElementById('taskType').value = 'link';
+            document.getElementById('taskUrl').value = '';
+            document.getElementById('taskIcon').value = '';
+            document.getElementById('taskActive').checked = true;
+            openModal('taskModal');
+        }
+
+        function closeTaskModal() { closeModal('taskModal'); }
+
+        function openEditTaskModal(id, taskObj) {
+            document.getElementById('taskModalTitle').textContent = 'Edit Task';
+            document.getElementById('taskId').value = id;
+            document.getElementById('taskTitle').value = taskObj.title || '';
+            document.getElementById('taskDescription').value = taskObj.description || '';
+            document.getElementById('taskAmount').value = taskObj.amount || '';
+            document.getElementById('taskType').value = (taskObj.task_type || 'link');
+            document.getElementById('taskUrl').value = taskObj.task_url || (taskObj.link || '') || '';
+            document.getElementById('taskIcon').value = taskObj.icon || '';
+            document.getElementById('taskActive').checked = !!taskObj.is_active;
+            document.getElementById('taskTier').value = taskObj.tier || 'both';
+            document.getElementById('taskAmountAlpha').value = taskObj.amount_alpha || '';
+            document.getElementById('taskAmountMega').value = taskObj.amount_mega || '';
+            openModal('taskModal');
+        }
+
+        async function saveRegularTask() {
+            try {
+                const id = document.getElementById('taskId').value;
+                const payload = {
+                    title: document.getElementById('taskTitle').value.trim(),
+                    description: document.getElementById('taskDescription').value.trim(),
+                    amount: parseFloat(document.getElementById('taskAmount').value) || 0,
+                    task_type: document.getElementById('taskType').value,
+                    link: document.getElementById('taskUrl').value.trim() || undefined,
+                    tier: document.getElementById('taskTier').value || 'both',
+                    amount_alpha: (document.getElementById('taskAmountAlpha').value ? parseFloat(document.getElementById('taskAmountAlpha').value) : undefined),
+                    amount_mega: (document.getElementById('taskAmountMega').value ? parseFloat(document.getElementById('taskAmountMega').value) : undefined),
+                    icon: document.getElementById('taskIcon').value.trim() || undefined,
+                    is_active: document.getElementById('taskActive').checked ? 1 : 0
+                };
+
+                if (!payload.title || payload.amount <= 0) {
+                    showToast('Please provide a title and a positive amount', 'error');
+                    return;
+                }
+
+                if (id) {
+                    await adminAPI.updateTask(id, payload);
+                    showToast('Task updated', 'success');
+                } else {
+                    await adminAPI.createTask(payload);
+                    showToast('Task created', 'success');
+                }
+
+                closeTaskModal();
+                await loadRegularTasks();
+            } catch (err) {
+                console.error('Failed to save task:', err);
+                showToast('Failed to save task: ' + (err.message || 'Unknown error'), 'error');
+            }
+        }
+
+        async function deleteRegularTask(id) {
+            if (!confirm('Delete this task? This action cannot be undone.')) return;
+            try {
+                await adminAPI.deleteTask(id);
+                showToast('Task deleted', 'success');
+                await loadRegularTasks();
+            } catch (err) {
+                console.error('Failed to delete task:', err);
+                showToast('Failed to delete task', 'error');
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-NG').format(amount);
+        }
+        
+        /**
+         * Validates and formats a URL string
+         * @param {string} url - URL to validate
+         * @returns {Object} - {isValid: boolean, formattedUrl: string, error: string}
+         */
+        function validateAndFormatUrl(url) {
+            const result = {
+                isValid: false,
+                formattedUrl: '',
+                error: ''
+            };
+            
+            if (!url || typeof url !== 'string') {
+                result.error = 'URL is empty or invalid';
+                return result;
+            }
+            
+            // Trim the URL
+            url = url.trim();
+            
+            // Add protocol if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            
+            try {
+                // Validate URL format
+                const urlObj = new URL(url);
+                
+                // Check for required parts
+                if (!urlObj.hostname) {
+                    result.error = 'URL is missing a valid domain name';
+                    return result;
+                }
+                
+                // Success - return formatted URL
+                result.isValid = true;
+                result.formattedUrl = urlObj.toString();
+                return result;
+            } catch (e) {
+                result.error = `Invalid URL format: ${e.message}`;
+                return result;
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded - Initializing admin-tasks.html');
+            
+            // Initialize admin UI components
+            initAdminUI();
+            
+            if (typeof window.adminAPI === 'undefined') {
+                console.error('Admin API is not available');
+                document.getElementById('taskContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="empty-state-title">API Error</h3>
+                        <p class="empty-state-description">Admin API is not available. Please check your connection and refresh the page.</p>
+                        <button class="btn btn-primary" onclick="location.reload()">
+                            <i class="fas fa-redo"></i> Refresh Page
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                console.log('Loading dashboard data...');
+                await loadDashboardData();
+                
+                console.log('Loading click-to-earn task...');
+                await loadTask();
+                console.log('Loading regular tasks...');
+                await loadRegularTasks();
+                console.log('Task loaded successfully');
+            } catch (err) {
+                console.error('Error during page initialization:', err);
+                showToast('Error loading page data: ' + (err.message || 'Unknown error'), 'error');
+            }
+        });
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + '/admin/dashboard', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

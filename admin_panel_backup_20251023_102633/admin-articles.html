@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Management - Affluence Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar h2 { margin-bottom: 30px; font-size: 24px; }
+        .sidebar-menu { list-style: none; padding: 0; }
+        .sidebar-menu li { margin-bottom: 10px; }
+        .sidebar-menu a { color: white; text-decoration: none; display: block; padding: 12px 15px; border-radius: 8px; transition: background 0.3s; }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background: rgba(255, 255, 255, 0.2); }
+        .main-content { margin-left: 250px; flex: 1; padding: 30px; background: #f5f7fa; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 32px; color: #2d3748; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .content-section { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        table th, table td { padding: 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        table th { background: #f7fafc; font-weight: 600; color: #4a5568; }
+        table tr:hover { background: #f7fafc; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-published { background: #c6f6d5; color: #22543d; }
+        .badge-draft { background: #feebc8; color: #7c2d12; }
+        .action-btns { display: flex; gap: 8px; }
+        .btn-small { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: opacity 0.3s; }
+        .btn-small:hover { opacity: 0.8; }
+        .btn-edit { background: #4299e1; color: white; }
+        .btn-publish { background: #48bb78; color: white; }
+        .btn-delete { background: #f56565; color: white; }
+        .logout-btn { background: rgba(255, 255, 255, 0.2); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 20px; width: 100%; }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .loading { text-align: center; padding: 40px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="sidebar">
+            <h2>🎯 Affluence Admin</h2>
+            <ul class="sidebar-menu">
+                <li><a href="admin-dashboard.html">📊 Dashboard</a></li>
+                <li><a href="admin-users.html">👥 Users</a></li>
+                <li><a href="admin-coupons.html">🎟️ Coupons</a></li>
+                <li><a href="admin-articles.html" class="active">📰 Articles</a></li>
+                <li><a href="admin-cards.html">🎴 Cards</a></li>
+                <li><a href="admin-withdrawals.html">💰 Withdrawals</a></li>
+                <li><a href="admin-announcements.html">📢 Announcements</a></li>
+                <li><a href="admin-logs.html">📝 System Logs</a></li>
+            </ul>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </aside>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>📰 Article Management</h1>
+                <button class="btn btn-primary" onclick="createArticleModal()">+ Create Article</button>
+            </div>
+
+            <div class="content-section">
+                <div id="articlesTable"><div class="loading">Loading articles...</div></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        async function loadArticles() {
+            try {
+                const articles = await adminAPI.getArticles(0, 100, true);
+
+                if (articles.length === 0) {
+                    document.getElementById('articlesTable').innerHTML = '<p style="text-align: center; color: #718096;">No articles found</p>';
+                    return;
+                }
+
+                const tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Reward</th>
+                                <th>Read Time</th>
+                                <th>Read Count</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${articles.map(article => `
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">${article.title}</div>
+                                        <div style="font-size: 12px; color: #718096;">${article.description ? article.description.substring(0, 50) + '...' : ''}</div>
+                                    </td>
+                                    <td>$${article.reward_amount.toFixed(2)}</td>
+                                    <td>${Math.floor(article.estimated_read_time / 60)} min</td>
+                                    <td>${article.read_count}</td>
+                                    <td><span class="badge badge-${article.is_published ? 'published' : 'draft'}">${article.is_published ? 'Published' : 'Draft'}</span></td>
+                                    <td>${new Date(article.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-small btn-edit" onclick='editArticle(${JSON.stringify(article)})'>Edit</button>
+                                            ${!article.is_published ? `<button class="btn-small btn-publish" onclick="togglePublish(${article.id}, true)">Publish</button>` : `<button class="btn-small btn-publish" onclick="togglePublish(${article.id}, false)">Unpublish</button>`}
+                                            <button class="btn-small btn-delete" onclick="deleteArticleConfirm(${article.id}, '${article.title.replace(/'/g, "\\'")}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('articlesTable').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading articles:', error);
+                document.getElementById('articlesTable').innerHTML = '<p style="color: red;">Failed to load articles</p>';
+            }
+        }
+
+        function createArticleModal() {
+            showFormModal('Create New Article', [
+                { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Article title' },
+                { name: 'description', label: 'Description', type: 'text', required: true, placeholder: 'Short description' },
+                { name: 'content', label: 'Content', type: 'textarea', required: true, placeholder: 'Full article content...' },
+                { name: 'reward_amount', label: 'Reward Amount ($)', type: 'number', required: true, placeholder: '5.00', step: '0.01' },
+                { name: 'estimated_read_time', label: 'Estimated Read Time (seconds)', type: 'number', required: true, placeholder: '300' },
+                { name: 'is_published', label: 'Publish Immediately', type: 'select', required: true, options: [
+                    { value: 'false', label: 'No (Save as Draft)' },
+                    { value: 'true', label: 'Yes (Publish Now)' }
+                ]}
+            ], async (data) => {
+                try {
+                    data.is_published = data.is_published === 'true';
+                    data.estimated_read_time = parseInt(data.estimated_read_time);
+                    await adminAPI.createArticle(data);
+                    showToast('Article created successfully!', 'success');
+                    loadArticles();
+                } catch (error) {
+                    showToast('Failed to create article: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function editArticle(article) {
+            showFormModal('Edit Article', [
+                { name: 'title', label: 'Title', type: 'text', required: true, value: article.title },
+                { name: 'description', label: 'Description', type: 'text', required: true, value: article.description },
+                { name: 'content', label: 'Content', type: 'textarea', required: true, value: article.content },
+                { name: 'reward_amount', label: 'Reward Amount ($)', type: 'number', required: true, value: article.reward_amount, step: '0.01' },
+                { name: 'estimated_read_time', label: 'Estimated Read Time (seconds)', type: 'number', required: true, value: article.estimated_read_time },
+                { name: 'is_published', label: 'Status', type: 'select', required: true, value: article.is_published.toString(), options: [
+                    { value: 'false', label: 'Draft' },
+                    { value: 'true', label: 'Published' }
+                ]}
+            ], async (data) => {
+                try {
+                    data.is_published = data.is_published === 'true';
+                    data.estimated_read_time = parseInt(data.estimated_read_time);
+                    await adminAPI.updateArticle(article.id, data);
+                    showToast('Article updated successfully!', 'success');
+                    loadArticles();
+                } catch (error) {
+                    showToast('Failed to update article: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function togglePublish(articleId, publish) {
+            try {
+                await adminAPI.updateArticle(articleId, { is_published: publish });
+                showToast(`Article ${publish ? 'published' : 'unpublished'} successfully!`, 'success');
+                loadArticles();
+            } catch (error) {
+                showToast('Failed to update article: ' + error.message, 'error');
+            }
+        }
+
+        function deleteArticleConfirm(articleId, title) {
+            showModal('Delete Article', `Are you sure you want to delete article <strong>${title}</strong>? This action cannot be undone.`, async () => {
+                try {
+                    await adminAPI.deleteArticle(articleId);
+                    showToast('Article deleted successfully!', 'success');
+                    loadArticles();
+                } catch (error) {
+                    showToast('Failed to delete article: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+
+        loadArticles();
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + \'/dashboard\', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

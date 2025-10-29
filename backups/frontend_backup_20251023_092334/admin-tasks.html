@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item active">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-logs.html" class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                    <a href="vendor-lounge.html" class="nav-item" id="vendorMenuItem" style="display: none;">
+                        <i class="fas fa-store"></i>
+                        <span>Vendor Lounge</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">Click to Earn Task</h1>
+                </div>
+            </div>
+
+            <!-- Task Info Card -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Current Task Settings</h2>
+                </div>
+                <div id="taskContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Task Type Selection Modal -->
+    <div id="taskTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Select Task Type</h3>
+                <button class="modal-close" onclick="closeTypeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1.5rem; color: var(--text-light); text-align: center;">
+                    Choose whether this task is for Mega or Alpha users:
+                </p>
+                <div style="display: grid; gap: 1rem;">
+                    <button onclick="saveTaskWithType('mega')" class="btn btn-primary" style="padding: 1.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-gem"></i> Mega - ₦500
+                    </button>
+                    <button onclick="saveTaskWithType('alpha')" class="btn" style="background: var(--success); color: white; padding: 1.5rem; font-size: 1.1rem;">
+                        <i class="fas fa-star"></i> Alpha - ₦2000
+                    </button>
+                    <button onclick="closeTypeModal()" class="btn" style="background: var(--border); color: var(--text);">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        // Fallback: ensure adminAPI exists
+        if (typeof window.adminAPI === 'undefined') {
+            console.warn('adminAPI not found, installing minimal fallback using window.api');
+            if (typeof window.api === 'undefined') {
+                console.error('api helper not loaded; cannot proceed');
+            } else {
+                window.adminAPI = {
+                    getClickToEarnTask: async () => window.api.get('/admin/click-to-earn'),
+                    updateClickToEarnTask: async (data) => window.api.put('/admin/click-to-earn', data),
+                };
+            }
+        }
+
+        let currentTaskLink = '';
+
+        async function loadTask() {
+            try {
+                const task = await adminAPI.getClickToEarnTask();
+                
+                const contentHtml = `
+                    <div style="display: grid; gap: 24px; padding: 24px;">
+                        <div style="background: var(--light); padding: 20px; border-radius: 8px;">
+                            <div style="display: grid; gap: 16px;">
+                                <div>
+                                    <label style="display: block; font-weight: 600; color: var(--text-light); margin-bottom: 8px; font-size: 14px;">Task Type</label>
+                                    <span class="badge ${task.task_type === 'mega' ? 'badge-warning' : 'badge-success'}" style="font-size: 14px; padding: 8px 16px;">
+                                        ${task.task_type === 'mega' ? '💎 Mega - ₦500' : '🌟 Alpha - ₦2000'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: 600; color: var(--text-light); margin-bottom: 8px; font-size: 14px;">Reward Amount</label>
+                                    <span style="font-size: 24px; font-weight: 700; color: var(--primary);">
+                                        ₦${task.amount.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: 600; color: var(--text-light); margin-bottom: 8px; font-size: 14px;">Current Link</label>
+                                    <a href="${task.link}" target="_blank" style="color: var(--primary); word-break: break-all; text-decoration: none; padding: 12px; background: white; border-radius: 8px; display: block; border: 1px solid var(--border);">
+                                        ${task.link}
+                                    </a>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: 600; color: var(--text-light); margin-bottom: 8px; font-size: 14px;">Last Updated</label>
+                                    <span style="color: var(--text-light);">${new Date(task.updated_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--light); padding: 20px; border-radius: 8px; border: 2px dashed var(--border);">
+                            <h3 style="margin-bottom: 20px; color: var(--text); font-size: 18px; font-weight: 600;">Update Task</h3>
+                            <div class="form-group">
+                                <label class="form-label">New Link</label>
+                                <input 
+                                    type="url" 
+                                    id="taskLink" 
+                                    value="${task.link}" 
+                                    required 
+                                    placeholder="https://example.com"
+                                    class="form-control"
+                                >
+                            </div>
+                            <button onclick="showTaskTypeModal()" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('taskContent').innerHTML = contentHtml;
+            } catch (error) {
+                console.error('Error loading task:', error);
+                document.getElementById('taskContent').innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <p>Failed to load task: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showTaskTypeModal() {
+            const link = document.getElementById('taskLink').value.trim();
+            
+            if (!link) {
+                showToast('Please enter a valid link', 'error');
+                return;
+            }
+
+            if (!link.startsWith('http://') && !link.startsWith('https://')) {
+                showToast('Link must start with http:// or https://', 'error');
+                return;
+            }
+
+            currentTaskLink = link;
+            openModal('taskTypeModal');
+        }
+
+        function closeTypeModal() {
+            closeModal('taskTypeModal');
+            currentTaskLink = '';
+        }
+
+        async function saveTaskWithType(taskType) {
+            try {
+                const amount = taskType === 'mega' ? 500.0 : 2000.0;
+                
+                const taskData = {
+                    link: currentTaskLink,
+                    task_type: taskType,
+                    amount: amount
+                };
+
+                await adminAPI.updateClickToEarnTask(taskData);
+                
+                closeTypeModal();
+                loadTask();
+                
+                showToast(
+                    `Task updated successfully! Type: ${taskType.toUpperCase()} | Amount: ₦${amount.toFixed(2)}`,
+                    'success'
+                );
+            } catch (error) {
+                console.error('Error updating task:', error);
+                showToast('Failed to update task: ' + error.message, 'error');
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            initAdminUI();
+            
+            if (typeof window.adminAPI === 'undefined') {
+                document.getElementById('taskContent').innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--danger);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <p>Failed to load task: adminAPI is not available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            loadTask();
+        });
+    </script>
+</body>
+</html>

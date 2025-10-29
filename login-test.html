@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="api-base" content="https://affluence-backends-noae.vercel.app/api">
+    <title>Login Test - Affluence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        #apiLog {
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Functionality Test</h1>
+    
+    <div class="card">
+        <h2>API Configuration</h2>
+        <div id="apiConfig"></div>
+        <button onclick="refreshApiConfig()" style="margin-top: 15px;">Refresh API Configuration</button>
+        <button onclick="testApiConnection()" style="margin-top: 15px; margin-left: 10px;">Test API Connection</button>
+        <div id="connectionResult" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>API Direct Check</h2>
+        <button onclick="testDirectApiConnection()">Test Direct API Connection</button>
+        <div id="directApiContent" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Login Test</h2>
+        <div class="input-group">
+            <label for="username">Username or Email:</label>
+            <input type="text" id="username" placeholder="Enter username or email">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+        
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button onclick="testLogin()" style="flex: 1">Test Login via API.js</button>
+            <button onclick="testDirectLogin()" style="flex: 1">Test Direct Login</button>
+        </div>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>API Log</h2>
+        <div id="apiLog"></div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="index.html">Back to Home</a>
+    </div>
+    
+    <!-- Debug Script -->
+    <script>
+        console.log('Before loading API script');
+    </script>
+    
+    <!-- API Script -->
+    <script>
+        // Handle API script errors
+        window.apiLoadError = false;
+        window.apiErrorMessage = '';
+        window.addEventListener('error', function(event) {
+            if (event.filename && event.filename.includes('api.js')) {
+                console.error('API script error:', event);
+                window.apiLoadError = true;
+                window.apiErrorMessage = event.message;
+                // Prevent additional error popups
+                event.preventDefault();
+            }
+        });
+    </script>
+    <script src="js/api.js" onerror="console.error('Failed to load api.js');"></script>
+    
+    <!-- After API Script -->
+    <script>
+        console.log('After loading API script, window.api =', window.api);
+        
+        // Detailed API debugging
+        const apiStatus = {
+            apiExists: typeof window.api !== 'undefined',
+            apiObject: typeof window.api === 'object' ? Object.keys(window.api) : 'Not an object',
+            apiLoadError: window.apiLoadError,
+            apiErrorMessage: window.apiErrorMessage
+        };
+        console.log('API Status:', apiStatus);
+        
+        // Safety check - create a local API instance if global one isn't available
+        if (!window.api && typeof AffluenceAPI !== 'undefined') {
+            console.log('Creating local API instance since global one is missing');
+            window.api = new AffluenceAPI();
+        }
+    </script>
+    
+    <script>
+        // Log original API object
+        console.log('API object from script:', window.api);
+        
+        // Override console.log for API logging
+        const originalConsoleLog = console.log;
+        const logContainer = document.getElementById('apiLog');
+        
+        console.log = function(...args) {
+            // Call original console.log
+            originalConsoleLog.apply(console, args);
+            
+            // Only log API-related messages
+            const message = args.join(' ');
+            if (message.includes('[api.js]')) {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.textContent = message;
+                
+                if (logContainer) {
+                    logContainer.appendChild(logEntry);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            }
+        };
+        
+        // Display API configuration
+        function displayApiConfig() {
+            const api = window.api;
+            const configElement = document.getElementById('apiConfig');
+            
+            if (!api) {
+                configElement.innerHTML = `
+                    <p class="error">Error: API object not found!</p>
+                    <p>Possible issues:</p>
+                    <ul>
+                        <li>API script failed to load properly</li>
+                        <li>API script has errors preventing initialization</li>
+                        <li>Script loading order issues</li>
+                    </ul>
+                `;
+                return;
+            }
+            
+            try {
+                let configHtml = '<table style="width: 100%">';
+                configHtml += `<tr><td><strong>Base URL:</strong></td><td>${api.baseURL || 'Not set'}</td></tr>`;
+                configHtml += `<tr><td><strong>Authenticated:</strong></td><td>${api.isAuthenticated ? (api.isAuthenticated() ? 'Yes' : 'No') : 'Unknown'}</td></tr>`;
+                configHtml += `<tr><td><strong>Debug Mode:</strong></td><td>${api.debug !== undefined ? (api.debug ? 'Enabled' : 'Disabled') : 'Unknown'}</td></tr>`;
+                configHtml += `<tr><td><strong>API Status:</strong></td><td>${typeof api.testConnection === 'function' ? 'Ready' : 'Missing methods'}</td></tr>`;
+                configHtml += '</table>';
+                
+                configElement.innerHTML = configHtml;
+            } catch (err) {
+                configElement.innerHTML = `
+                    <p class="error">Error accessing API properties: ${err.message}</p>
+                    <p>API object exists but appears to be malformed</p>
+                `;
+                console.error('Error in displayApiConfig:', err);
+            }
+        }
+        
+        // Function to refresh API configuration
+        function refreshApiConfig() {
+            console.log('Refreshing API configuration');
+            displayApiConfig();
+        }
+        
+        // Test login function
+        async function testLogin() {
+            // Debug checks for API
+            console.log("TestLogin function called");
+            console.log("window.api exists:", typeof window.api !== 'undefined');
+            
+            // Safety check for API
+            if (!window.api) {
+                document.getElementById('result').innerHTML = `
+                    <p class="error">API object not found!</p>
+                    <p>This could be due to:</p>
+                    <ul>
+                        <li>JavaScript errors in api.js preventing initialization</li>
+                        <li>Network issues loading the script</li>
+                        <li>Script loading order problems</li>
+                    </ul>
+                    <p>Check the browser console for more details.</p>
+                `;
+                return;
+            }
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const resultElement = document.getElementById('loginResult');
+            
+            if (!username || !password) {
+                resultElement.innerHTML = '<p class="error">Please enter both username/email and password</p>';
+                return;
+            }
+            
+            resultElement.innerHTML = '<p>Testing login...</p>';
+            
+            try {
+                // Check if API object exists
+                if (!window.api) {
+                    throw new Error('API object not initialized. Check console for errors.');
+                }
+                
+                // Verify login method exists
+                if (typeof window.api.login !== 'function') {
+                    throw new Error('api.login is not a function. API object might be incorrectly initialized.');
+                }
+                
+                // Log API details before login attempt
+                console.log('[api.js] Login test - API object before login:', 
+                    JSON.stringify({
+                        baseURL: window.api.baseURL,
+                        isAuthenticated: window.api.isAuthenticated(),
+                        hasToken: !!window.api.getToken()
+                    })
+                );
+                
+                // Start login
+                console.log(`[api.js] Login test - Attempting login with username: ${username}`);
+                
+                const startTime = performance.now();
+                
+                try {
+                    const loginResult = await window.api.login(username, password);
+                    const endTime = performance.now();
+                    
+                    // Success - show result
+                    resultElement.innerHTML = `
+                        <p class="success">Login successful! (${Math.round(endTime - startTime)}ms)</p>
+                        <pre>${JSON.stringify(loginResult, null, 2)}</pre>
+                        <p style="margin-top: 15px;">JWT Token received and stored. You can now access protected endpoints.</p>
+                        <p><strong>Next steps:</strong></p>
+                        <ul>
+                            <li>Go to <a href="dashboard.html">Dashboard</a></li>
+                            <li>Access <a href="profile.html">Your Profile</a></li>
+                            <li><button onclick="testDashboardEndpoint()" style="margin-top: 10px;">Test Dashboard API</button></li>
+                        </ul>
+                        <div style="margin-top: 20px;" class="card">
+                            <h3>API Compatibility Notes</h3>
+                            <p><strong>Dashboard data:</strong> The backend doesn't have a specific <code>/dashboard/stats</code> endpoint. 
+                            The system now uses the <code>/users/me</code> endpoint to gather user data for the dashboard.</p>
+                            
+                            <p><strong>Missing endpoints:</strong> The following endpoints are not available and have been handled gracefully:</p>
+                            <ul>
+                                <li><code>/dashboard/stats</code> - Replaced with <code>/users/me</code></li>
+                                <li><code>/users/me/transactions</code> - Transaction history is not displayed</li>
+                            </ul>
+                            
+                            <p><strong>API compatibility:</strong> The dashboard.js and api.js files have been updated to work with 
+                            the available endpoints and handle various data formats.</p>
+                            
+                            <button onclick="testDashboardEndpoint()" class="btn btn-primary" style="margin-top: 10px;">
+                                Test Current API Compatibility
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Update API config display
+                    displayApiConfig();
+                } catch (loginError) {
+                    // Handle 422 validation errors separately
+                    if (loginError.status === 422) {
+                        const endTime = performance.now();
+                        let validationDetails = '';
+                        
+                        if (loginError.data && loginError.data.detail) {
+                            if (Array.isArray(loginError.data.detail)) {
+                                validationDetails = loginError.data.detail.map(err => 
+                                    `<li><strong>${err.loc.slice(1).join('.')}:</strong> ${err.msg}</li>`
+                                ).join('');
+                            } else {
+                                validationDetails = `<li>${loginError.data.detail}</li>`;
+                            }
+                        }
+                        
+                        // Log the error details for debugging
+                        console.log('Login validation error (422):', loginError.data);
+                        
+                        resultElement.innerHTML = `
+                            <p class="error">Login validation failed (${Math.round(endTime - startTime)}ms)</p>
+                            <div style="margin-top: 10px;">
+                                <p><strong>Validation errors:</strong></p>
+                                <ul>${validationDetails || '<li>Invalid login data</li>'}</ul>
+                            </div>
+                            <div style="margin-top: 15px; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                                <p><strong>What does "422 Unprocessable Content" mean?</strong></p>
+                                <p>This is a standard FastAPI validation error that occurs when:</p>
+                                <ul>
+                                    <li>The email format is invalid</li>
+                                    <li>Required fields are missing (email or password)</li>
+                                    <li>Data format doesn't match what the API expects</li>
+                                </ul>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <p><strong>How to fix:</strong></p>
+                                <ul>
+                                    <li>Make sure you're using a registered email or username</li>
+                                    <li>Ensure your email format is correct (example@domain.com)</li>
+                                    <li>Check that your password is correct and not empty</li>
+                                    <li>Try using the <a href="register.html">registration form</a> if you don't have an account</li>
+                                </ul>
+                            </div>
+                        `;
+                    } else {
+                        // Handle other login errors
+                        const endTime = performance.now();
+                        
+                        // Format error details
+                        let errorDetails = '';
+                        if (loginError.data) {
+                            errorDetails = `<pre>${JSON.stringify(loginError.data, null, 2)}</pre>`;
+                        }
+                        
+                        resultElement.innerHTML = `
+                            <p class="error">Login failed: ${loginError.message || 'Unknown error'} (${Math.round(endTime - startTime)}ms)</p>
+                            ${errorDetails}
+                            <div style="margin-top: 15px;">
+                                <p><strong>Common fixes:</strong></p>
+                                <ul>
+                                    <li>Check your username/email and password</li>
+                                    <li>Make sure your account is active</li>
+                                    <li>Try using the <a href="register.html">registration form</a> if you don't have an account</li>
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Login test setup error:', error);
+                
+                // Debug API status
+                const apiStatus = {
+                    apiExists: typeof window.api !== 'undefined',
+                    apiObject: typeof window.api === 'object' ? Object.keys(window.api) : 'Not an object',
+                    loginMethod: typeof window.api?.login === 'function' ? 'Found' : 'Missing',
+                    errorType: error.constructor.name,
+                    errorMessage: error.message
+                };
+                console.log('API Status:', apiStatus);
+                
+                resultElement.innerHTML = `
+                    <p class="error">Login test failed: ${error.message || 'Unknown error'}</p>
+                    <div style="margin-top: 10px;">
+                        <p><strong>API Status:</strong></p>
+                        <pre>${JSON.stringify(apiStatus, null, 2)}</pre>
+                        <p><strong>This appears to be a technical issue:</strong></p>
+                        <ul>
+                            <li>The API service might not be properly initialized</li>
+                            <li>Check the browser console for more detailed error messages</li>
+                            <li>Try refreshing the page</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        // Test API connection function
+        async function testApiConnection() {
+            const resultElement = document.getElementById('connectionResult');
+            resultElement.innerHTML = '<p>Testing API connection...</p>';
+            
+            try {
+                // First, verify that the API object exists
+                if (!window.api) {
+                    console.error('API object not found');
+                    
+                    // Attempt to recreate API object if AffluenceAPI class is available
+                    if (typeof AffluenceAPI !== 'undefined') {
+                        console.log('Attempting to create new API instance');
+                        window.api = new AffluenceAPI();
+                        
+                        // If successful, update the config display
+                        if (window.api) {
+                            displayApiConfig();
+                        } else {
+                            throw new Error('API object not available');
+                        }
+                    } else {
+                        throw new Error('API module not loaded correctly');
+                    }
+                }
+                
+                // Now verify the testConnection method exists
+                if (typeof window.api.testConnection !== 'function') {
+                    throw new Error('API object is missing testConnection method');
+                }
+                
+                // Actually test the connection
+                const isConnected = await window.api.testConnection();
+                
+                if (isConnected) {
+                    resultElement.innerHTML = `
+                        <p class="success"><strong>Success:</strong> API connection established!</p>
+                        <p>Successfully connected to: ${window.api.baseURL}</p>
+                    `;
+                } else {
+                    resultElement.innerHTML = `
+                        <p class="error"><strong>Error:</strong> Could not connect to API server.</p>
+                        <div style="margin-top: 10px;">
+                            <p><strong>Troubleshooting:</strong></p>
+                            <ol>
+                                <li>Make sure the backend server is running</li>
+                                <li>Run <code>start_backend.bat</code> to start the API server</li>
+                                <li>Check if there are any error messages in the backend console</li>
+                                <li>Verify API base URL: <code>${window.api.baseURL || 'Not set'}</code></li>
+                            </ol>
+                            <button onclick="testApiConnection()" style="margin-top: 10px;">Retry Connection Test</button>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('API connection test error:', err);
+                
+                // Try to gather diagnostic information
+                const diagnostics = {
+                    apiExists: typeof window.api !== 'undefined',
+                    apiIsObject: typeof window.api === 'object',
+                    apiMethods: window.api ? Object.keys(window.api).join(', ') : 'N/A',
+                    apiBaseUrl: window.api?.baseURL || 'Not available',
+                    errorMessage: err.message,
+                    errorType: err.constructor.name
+                };
+                
+                console.log('API Diagnostics:', diagnostics);
+                
+                resultElement.innerHTML = `
+                    <p class="error"><strong>Error:</strong> ${err.message}</p>
+                    <div style="margin-top: 10px;">
+                        <p><strong>API Diagnostics:</strong></p>
+                        <pre>${JSON.stringify(diagnostics, null, 2)}</pre>
+                        <button onclick="testApiConnection()" style="margin-top: 10px;">Retry Connection Test</button>
+                        <button onclick="testDirectApiConnection()" style="margin-top: 10px; margin-left: 10px;">Try Direct API Check</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Test API connection directly without relying on API.js
+        async function testDirectApiConnection() {
+            const resultElement = document.getElementById('directApiContent');
+            resultElement.innerHTML = '<p>Testing API connection directly...</p>';
+            
+            try {
+                // Try to determine the API base URL
+                let apiUrl = 'http://localhost:8000/api';
+                
+                // Check if meta tag exists
+                const meta = document.querySelector('meta[name="api-base"]');
+                if (meta && meta.content) {
+                    apiUrl = meta.content;
+                }
+                
+                // Check if stored in localStorage
+                const stored = localStorage.getItem('affluence_api_base');
+                if (stored) {
+                    apiUrl = stored;
+                }
+                
+                // Make a direct fetch call to the health endpoint
+                const response = await fetch(`${apiUrl}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultElement.innerHTML = `
+                        <p class="success">API server is running!</p>
+                        <p><strong>Working API URL:</strong> ${apiUrl}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultElement.innerHTML = `
+                        <p class="error">API server responded with error: ${response.status} ${response.statusText}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                console.error('Direct API check error:', err);
+                
+                resultElement.innerHTML = `
+                    <p class="error">Error connecting to API: ${err.message}</p>
+                    <p>The API server might not be running. Try starting it with start_backend.bat</p>
+                `;
+            }
+        }
+        
+        // Test Dashboard API endpoint directly
+        async function testDashboardEndpoint() {
+            if (!window.api || !window.api.getToken()) {
+                alert('You must login first to test the dashboard endpoint');
+                return;
+            }
+            
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = '<p>Testing user profile and dashboard data...</p>';
+            
+            try {
+                // Get API base URL
+                let apiUrl = window.api.baseURL || 'http://localhost:8000/api';
+                const token = window.api.getToken();
+                
+                // First try to get user profile
+                let userProfileResponse;
+                let userProfileData;
+                
+                try {
+                    userProfileResponse = await fetch(`${apiUrl}/users/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    userProfileData = await userProfileResponse.json();
+                } catch (err) {
+                    console.error('Error fetching user profile:', err);
+                    userProfileData = { error: err.message };
+                }
+                
+                // Try the new getDashboardStats method
+                let dashboardData = null;
+                let dashboardError = null;
+                
+                try {
+                    if (window.api && typeof window.api.getDashboardStats === 'function') {
+                        dashboardData = await window.api.getDashboardStats();
+                    } else {
+                        dashboardError = "getDashboardStats method not available";
+                    }
+                } catch (err) {
+                    console.error('Error using getDashboardStats:', err);
+                    dashboardError = err.message;
+                }
+                
+                resultElement.innerHTML = `
+                    <h3>User Profile Endpoint Test</h3>
+                    <p class="${userProfileResponse && userProfileResponse.ok ? 'success' : 'error'}">
+                        Status: ${userProfileResponse ? userProfileResponse.status : 'Failed'} 
+                        ${userProfileResponse ? userProfileResponse.statusText : ''}
+                    </p>
+                    <pre>${JSON.stringify(userProfileData, null, 2)}</pre>
+                    
+                    <h3>Dashboard Data Test</h3>
+                    ${dashboardData ? 
+                        `<p class="success">Dashboard data successfully compiled</p>
+                        <pre>${JSON.stringify(dashboardData, null, 2)}</pre>` : 
+                        `<p class="error">Error compiling dashboard data: ${dashboardError}</p>`
+                    }
+                    
+                    <h3>Available Endpoints</h3>
+                    <p>The system now uses these endpoints:</p>
+                    <ul>
+                        <li><code>/users/me</code> - User profile data ✅ <span class="success">Available</span></li>
+                        <li><code>/users/me/transactions</code> - User transaction history ❌ <span class="error">Not Available (404)</span></li>
+                    </ul>
+                    <p class="note" style="margin-top:10px; padding: 10px; background: #f8f9fa; border-left: 4px solid #3498db;">
+                        <strong>Note:</strong> The dashboard has been updated to function without the transactions endpoint.
+                        Transaction history will not be displayed, but other dashboard features will work correctly.
+                    </p>
+                `;
+            } catch (err) {
+                console.error('Dashboard test error:', err);
+                resultElement.innerHTML = `
+                    <p class="error">Error testing dashboard data: ${err.message}</p>
+                `;
+            }
+        }
+                
+                resultElement.innerHTML = `
+                    <p class="error"><strong>Error:</strong> ${err.message}</p>
+                    <div style="margin-top: 10px;">
+                        <p><strong>API Diagnostics:</strong></p>
+                        <pre>${JSON.stringify(diagnostics, null, 2)}</pre>
+                        <p><strong>Troubleshooting:</strong></p>
+                        <ol>
+                            <li>Make sure the backend server is running</li>
+                            <li>Run <code>start_backend.bat</code> to start the API server</li>
+                            <li>Check if there are any error messages in the browser console</li>
+                            <li>Try reloading the page to reinitialize the API</li>
+                        </ol>
+                        <button onclick="testApiConnection()" style="margin-top: 10px;">Retry Connection Test</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            displayApiConfig();
+            
+            // Add event listener for Enter key in password field
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    testLogin();
+                }
+            });
+            
+            // Initialize and check the API
+            initializeApi();
+        });
+        
+        // Function to ensure API is properly initialized
+        function initializeApi() {
+            console.log('Initializing API...');
+            
+            // Try a direct fetch to check if API is accessible without relying on api.js
+            directApiHealthCheck();
+            
+            // If API object is not available, try to create it
+            if (!window.api && typeof AffluenceAPI !== 'undefined') {
+                console.log('API object not found, creating new instance');
+                try {
+                    window.api = new AffluenceAPI();
+                    console.log('Created new API instance:', window.api);
+                } catch (err) {
+                    console.error('Failed to create API instance:', err);
+                }
+            }
+            
+            // Try to auto-detect API URL if it doesn't exist
+            if (window.api && (!window.api.baseURL || window.api.baseURL === 'undefined')) {
+                console.log('API URL not properly set, trying to auto-detect');
+                
+                // Try common local development URLs
+                const possibleUrls = [
+                    'http://localhost:8000/api',
+                    'http://127.0.0.1:8000/api'
+                ];
+                
+                // Store original value
+                const originalUrl = window.api.baseURL;
+                
+                // Set the first URL temporarily
+                window.api.baseURL = possibleUrls[0];
+                console.log('Setting API URL to:', window.api.baseURL);
+                
+                // Attempt to override global API base URL
+                if (typeof window !== 'undefined') {
+                    window.AFFLUENCE_API_BASE = possibleUrls[0];
+                }
+            }
+            
+            // Display current API configuration
+            displayApiConfig();
+            
+            // Test API connection
+            setTimeout(() => {
+                testApiConnection();
+            }, 500);
+        }
+        
+        // Direct health check without using the API.js file
+        async function directApiHealthCheck() {
+            console.log('Performing direct API health check');
+            const resultElement = document.getElementById('connectionResult');
+            
+            try {
+                // Try common API URLs
+                const urls = [
+                    'http://localhost:8000/api/health',
+                    'http://127.0.0.1:8000/api/health'
+                ];
+                
+                let connected = false;
+                let workingUrl = '';
+                
+                for (const url of urls) {
+                    try {
+                        console.log('Trying direct fetch to:', url);
+                        const response = await fetch(url);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Direct API check successful:', data);
+                            connected = true;
+                            workingUrl = url.replace('/health', '');
+                            break;
+                        }
+                    } catch (err) {
+                        console.log('Failed direct fetch to:', url, err);
+                    }
+                }
+                
+                if (connected) {
+                    console.log('Direct API check succeeded. Working URL:', workingUrl);
+                    
+                    // Set the working URL globally
+                    if (typeof window !== 'undefined') {
+                        window.AFFLUENCE_API_BASE = workingUrl;
+                    }
+                    
+                    // Update the API instance if it exists
+                    if (window.api) {
+                        window.api.baseURL = workingUrl;
+                    }
+                    
+                    // Add to result display
+                    resultElement.innerHTML = `
+                        <div style="margin-bottom: 10px;">
+                            <p class="success"><strong>API Direct Check:</strong> API server is running!</p>
+                            <p>Working API URL: <code>${workingUrl}</code></p>
+                        </div>
+                    `;
+                } else {
+                    console.log('All direct API checks failed');
+                    
+                    // Add to result display
+                    resultElement.innerHTML = `
+                        <div style="margin-bottom: 10px;">
+                            <p class="error"><strong>API Direct Check:</strong> Could not connect to API server</p>
+                            <p>Possible issues:</p>
+                            <ul>
+                                <li>Backend server is not running</li>
+                                <li>Backend is running on a different port/URL</li>
+                                <li>Network connectivity issues</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('Direct API health check error:', err);
+                resultElement.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <p class="error"><strong>API Direct Check Error:</strong> ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        /**
+         * Test login directly without using api.js
+         * This function makes a direct fetch request to the login endpoint
+         * using the same format that FastAPI's OAuth2PasswordRequestForm expects
+         */
+        async function testDirectLogin() {
+            const resultElement = document.getElementById('result');
+            
+            try {
+                resultElement.innerHTML = '<p>Testing direct login without using api.js...</p>';
+                
+                // Get form values
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (!username || !password) {
+                    resultElement.innerHTML = '<p class="error">Please enter both username and password</p>';
+                    return;
+                }
+                
+                // Determine API base URL (use meta tag, fallback to localhost)
+                const meta = document.querySelector('meta[name="api-base"]');
+                const baseUrl = meta?.content || 'http://localhost:8000/api';
+                
+                console.log('Direct login attempt to:', `${baseUrl}/auth/login`);
+                
+                // Start login timer
+                const startTime = performance.now();
+                
+                // Create form-urlencoded data (required for OAuth2PasswordRequestForm)
+                const formData = new URLSearchParams();
+                formData.append('username', username);
+                formData.append('password', password);
+                
+                // Make direct fetch request
+                const response = await fetch(`${baseUrl}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                
+                if (response.ok) {
+                    // Login successful
+                    resultElement.innerHTML = `
+                        <p class="success">Direct login successful! (${Math.round(endTime - startTime)}ms)</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        <p style="margin-top: 15px;">JWT Token received. You can store it manually or refresh to use the API.js version.</p>
+                    `;
+                    
+                    // Store token in localStorage for API.js to use
+                    localStorage.setItem('affluence_token', data.access_token);
+                    console.log('Token stored in localStorage via direct login');
+                } else {
+                    // Login failed
+                    let errorMessage = data.detail || 'Login failed';
+                    
+                    // Handle validation errors (422)
+                    if (response.status === 422 && data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            errorMessage = data.detail
+                                .map(err => `${err.loc.join('.')}: ${err.msg}`)
+                                .join('; ');
+                        }
+                    }
+                    
+                    resultElement.innerHTML = `
+                        <p class="error">Direct login failed: ${errorMessage} (${Math.round(endTime - startTime)}ms)</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('Direct login error:', error);
+                resultElement.innerHTML = `
+                    <p class="error">Direct login error: ${error.message}</p>
+                    <p>This could indicate:</p>
+                    <ul>
+                        <li>Backend server is not running</li>
+                        <li>Network connectivity issues</li>
+                        <li>CORS policy blocking the request</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

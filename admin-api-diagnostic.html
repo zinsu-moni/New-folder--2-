@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin API Diagnostic Tool</title>
+    
+    <!-- API Base URL Configuration -->
+    <meta name="api-base" content="https://affluence-backends-noae.vercel.app/api">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Internal CSS -->
+    <link rel="stylesheet" href="css/admin-shared.css">
+    <link rel="stylesheet" href="css/admin-mobile.css">
+    
+    <style>
+        .diagnostic-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .test-button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .test-button:hover {
+            background: #4338ca;
+        }
+        
+        .test-button.success {
+            background: #10b981;
+        }
+        
+        .test-button.error {
+            background: #ef4444;
+        }
+        
+        .test-result {
+            background: #f9fafb;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow: auto;
+        }
+        
+        .result-success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .result-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            margin: 10px 0;
+            font-family: monospace;
+            line-height: 1.5;
+        }
+
+        .instructions {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .fix-button {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Content -->
+    <main class="content-area" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <h1>Admin API Diagnostic Tool</h1>
+        
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <p>This tool helps diagnose API connection issues in the admin panel. Click the buttons below to test various API endpoints and see the raw responses.</p>
+        </div>
+        
+        <div class="warning">
+            <h3>Authentication Required</h3>
+            <p>Make sure you are logged in as an admin before running these tests. If you see 401 Unauthorized errors, try logging in again.</p>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>API Configuration</h2>
+            <div id="api-config"></div>
+            <button class="test-button" onclick="testApiConfig()">Test API Configuration</button>
+            <div id="api-config-result" class="test-result"></div>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>Path Construction Test</h2>
+            <div class="code-block">
+            <pre>
+// Current adminPath() function:
+function adminPath(path) {
+    if (!path.startsWith('/')) {
+        path = '/' + path;
+    }
+    
+    if (path.startsWith('/admin/')) {
+        path = path.substring(6); // Remove '/admin'
+    } else if (path === '/admin') {
+        path = '/';
+    }
+    
+    return path;
+}
+
+// Test Cases:
+adminPath('/dashboard')      → '/dashboard'
+adminPath('dashboard')       → '/dashboard'
+adminPath('/admin/dashboard')→ '/dashboard'
+adminPath('admin/dashboard') → '/dashboard'</pre>
+            </div>
+            <button class="test-button" onclick="testPathConstruction()">Test Path Construction</button>
+            <div id="path-test-result" class="test-result"></div>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>Dashboard API Test</h2>
+            <p>Tests both direct API call and adminAPI wrapper</p>
+            <div class="button-group">
+                <button class="test-button" onclick="testDirectApiCall('/api/admin/dashboard')">Test Direct API Call</button>
+                <button class="test-button" onclick="testAdminApiCall('getDashboard')">Test adminAPI.getDashboard()</button>
+            </div>
+            <div id="dashboard-result" class="test-result"></div>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>Users API Test</h2>
+            <p>Tests both direct API call and adminAPI wrapper</p>
+            <div class="button-group">
+                <button class="test-button" onclick="testDirectApiCall('/api/admin/users')">Test Direct API Call</button>
+                <button class="test-button" onclick="testAdminApiCall('getUsers')">Test adminAPI.getUsers()</button>
+            </div>
+            <div id="users-result" class="test-result"></div>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>Backend Route Analysis</h2>
+            <p>Analysis of the FastAPI routes</p>
+            <div class="code-block">
+            <pre>
+# From backend/app/routers/admin.py:
+router = APIRouter(prefix="/api/admin", tags=["Admin"])
+
+@router.get("/dashboard", response_model=AdminDashboardStats)
+async def get_admin_dashboard(...)
+
+@router.get("/users", response_model=List[UserDetailedStats])
+async def get_all_users(...)
+            </pre>
+            </div>
+            <p><strong>Conclusion:</strong> Backend expects routes like <code>/api/admin/dashboard</code></p>
+        </div>
+        
+        <div class="diagnostic-panel">
+            <h2>Recommended Fix</h2>
+            <p>Based on the analysis, the <code>adminPath()</code> function in admin.js needs to be fixed.</p>
+            <div class="code-block">
+            <pre>
+// Recommended fix for adminPath():
+function adminPath(path) {
+    // Add leading slash if missing
+    if (!path.startsWith('/')) {
+        path = '/' + path;
+    }
+    
+    // Backend routes already have /api/admin prefix
+    // Don't need to add or remove /admin prefix
+    
+    return path;
+}</pre>
+            </div>
+            <button class="test-button" onclick="testFixedPathConstruction()">Test Fixed Path Construction</button>
+            <div id="fixed-path-result" class="test-result"></div>
+            
+            <button id="applyFixButton" class="fix-button" onclick="applyFix()">Apply Fix to admin.js</button>
+            <div id="fix-result" class="test-result"></div>
+        </div>
+    </main>
+    
+    <!-- Include API and Admin Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <script>
+        // Test API Configuration
+        function testApiConfig() {
+            const configResult = document.getElementById('api-config-result');
+            configResult.innerHTML = '';
+            
+            try {
+                const config = {
+                    baseURL: api.baseURL,
+                    token: api.getToken() ? 'Present (hidden for security)' : 'Not found',
+                    isAuthenticated: api.isAuthenticated(),
+                    adminAPI: typeof adminAPI !== 'undefined',
+                };
+                
+                configResult.innerHTML = JSON.stringify(config, null, 2);
+                configResult.className = 'test-result result-success';
+                
+                // Update the api-config div
+                document.getElementById('api-config').innerHTML = `
+                    <p><strong>Base URL:</strong> ${api.baseURL}</p>
+                    <p><strong>Authentication:</strong> ${api.isAuthenticated() ? 'Authenticated' : 'Not Authenticated'}</p>
+                    <p><strong>Token:</strong> ${api.getToken() ? 'Present' : 'Not found'}</p>
+                    <p><strong>adminAPI:</strong> ${typeof adminAPI !== 'undefined' ? 'Available' : 'Not Available'}</p>
+                `;
+            } catch (error) {
+                configResult.innerHTML = 'Error checking API configuration:\n' + error.message;
+                configResult.className = 'test-result result-error';
+            }
+        }
+        
+        // Test Path Construction
+        function testPathConstruction() {
+            const resultEl = document.getElementById('path-test-result');
+            
+            if (typeof adminPath !== 'function') {
+                resultEl.innerHTML = 'adminPath function is not available. Make sure admin.js is loaded properly.';
+                resultEl.className = 'test-result result-error';
+                return;
+            }
+            
+            const testCases = [
+                '/dashboard',
+                'dashboard',
+                '/admin/dashboard',
+                'admin/dashboard',
+                '/users',
+                '/admin/users'
+            ];
+            
+            const results = testCases.map(path => {
+                return {
+                    input: path,
+                    output: adminPath(path),
+                    fullPath: api.baseURL + adminPath(path)
+                };
+            });
+            
+            resultEl.innerHTML = JSON.stringify(results, null, 2);
+            resultEl.className = 'test-result result-success';
+        }
+        
+        // Test Fixed Path Construction
+        function testFixedPathConstruction() {
+            const resultEl = document.getElementById('fixed-path-result');
+            
+            // Define fixed adminPath function
+            function fixedAdminPath(path) {
+                // Add leading slash if missing
+                if (!path.startsWith('/')) {
+                    path = '/' + path;
+                }
+                
+                // Don't modify the path further
+                return path;
+            }
+            
+            const testCases = [
+                '/dashboard',
+                'dashboard',
+                '/admin/dashboard',
+                'admin/dashboard',
+                '/users',
+                '/admin/users'
+            ];
+            
+            const results = testCases.map(path => {
+                return {
+                    input: path,
+                    currentOutput: adminPath(path),
+                    fixedOutput: fixedAdminPath(path),
+                    currentFullPath: api.baseURL + adminPath(path),
+                    fixedFullPath: api.baseURL + fixedAdminPath(path)
+                };
+            });
+            
+            resultEl.innerHTML = JSON.stringify(results, null, 2);
+            resultEl.className = 'test-result result-success';
+        }
+        
+        // Test Direct API Call
+        async function testDirectApiCall(path) {
+            const resultId = path.includes('dashboard') ? 'dashboard-result' : 'users-result';
+            const resultEl = document.getElementById(resultId);
+            resultEl.innerHTML = `Testing direct API call to ${path}...`;
+            
+            try {
+                const response = await fetch(path, {
+                    headers: {
+                        'Authorization': `Bearer ${api.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { error: "Failed to parse JSON response" };
+                }
+                
+                resultEl.innerHTML = `Status: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+                resultEl.className = response.ok ? 'test-result result-success' : 'test-result result-error';
+            } catch (error) {
+                resultEl.innerHTML = `Error fetching ${path}:\n${error.message}`;
+                resultEl.className = 'test-result result-error';
+            }
+        }
+        
+        // Test AdminAPI Call
+        async function testAdminApiCall(method) {
+            const resultEl = document.getElementById(method === 'getDashboard' ? 'dashboard-result' : 'users-result');
+            resultEl.innerHTML = `Testing adminAPI.${method}()...`;
+            
+            if (typeof adminAPI === 'undefined' || !adminAPI[method]) {
+                resultEl.innerHTML = `adminAPI or method ${method} is not available. Make sure admin.js is loaded properly.`;
+                resultEl.className = 'test-result result-error';
+                return;
+            }
+            
+            try {
+                const data = await adminAPI[method]();
+                
+                resultEl.innerHTML = JSON.stringify(data, null, 2);
+                resultEl.className = 'test-result result-success';
+            } catch (error) {
+                resultEl.innerHTML = `Error calling adminAPI.${method}():\n${error.message}`;
+                if (error.data) {
+                    resultEl.innerHTML += `\n\nError details: ${JSON.stringify(error.data, null, 2)}`;
+                }
+                resultEl.className = 'test-result result-error';
+            }
+        }
+        
+        // Apply Fix
+        function applyFix() {
+            const fixButton = document.getElementById('applyFixButton');
+            const resultEl = document.getElementById('fix-result');
+            
+            fixButton.disabled = true;
+            fixButton.textContent = 'Applying fix...';
+            
+            fetch('/fix-admin-js', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultEl.innerHTML = `Fix applied successfully!\n\n${JSON.stringify(data, null, 2)}`;
+                resultEl.className = 'test-result result-success';
+                fixButton.textContent = 'Fix Applied ✓';
+                fixButton.className = 'fix-button success';
+                
+                setTimeout(() => {
+                    if (confirm('Fix applied successfully! Reload the page to test the changes?')) {
+                        location.reload();
+                    }
+                }, 1000);
+            })
+            .catch(error => {
+                resultEl.innerHTML = `Error applying fix: ${error.message}\n\nPlease update the file manually.`;
+                resultEl.className = 'test-result result-error';
+                fixButton.textContent = 'Apply Fix Failed';
+                fixButton.className = 'fix-button error';
+                fixButton.disabled = false;
+                
+                // Show manual instructions
+                resultEl.innerHTML += `\n\nManual Fix Instructions:\n\n1. Open js/admin.js\n2. Find the adminPath() function (around line 26)\n3. Replace it with the fixed version:\n\nfunction adminPath(path) {\n    // Add leading slash if missing\n    if (!path.startsWith('/')) {\n        path = '/' + path;\n    }\n    \n    // Don't modify the path further\n    return path;\n}`;
+            });
+        }
+        
+        // Run initial config test
+        document.addEventListener('DOMContentLoaded', () => {
+            testApiConfig();
+        });
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + '/admin/dashboard', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Affluence Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 30px;
+            background: #f5f7fa;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #2d3748;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 10px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .content-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        table tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .badge-subadmin {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-user {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-inactive {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .btn-small:hover {
+            opacity: 0.8;
+        }
+
+        .btn-promote {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-disable {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-login {
+            background: #10b981;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+            /* Mobile Menu Toggle */
+            .mobile-menu-toggle {
+                display: none;
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 1001;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 12px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .mobile-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            @media (max-width: 768px) {
+                .sidebar {
+                    position: fixed;
+                    left: -100%;
+                    top: 0;
+                    width: 80%;
+                    max-width: 300px;
+                    height: 100vh;
+                    z-index: 1000;
+                    transition: left 0.3s ease;
+                    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+                }
+
+                .sidebar.active {
+                    left: 0;
+                }
+
+                .mobile-menu-toggle {
+                    display: block;
+                }
+
+                .main-content {
+                    margin-left: 0;
+                    padding: 70px 15px 15px;
+                    width: 100%;
+                }
+
+                .header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 15px;
+                }
+
+                .header h1 {
+                    font-size: 24px;
+                }
+
+                .filters {
+                    flex-direction: column;
+                    width: 100%;
+                }
+
+                .filters select, .filters input {
+                    width: 100%;
+                }
+
+                .content-section {
+                    padding: 15px;
+                    overflow-x: auto;
+                }
+
+                table {
+                    min-width: 600px;
+                }
+
+                table th, table td {
+                    padding: 10px 8px;
+                    font-size: 13px;
+                }
+
+                .action-btns {
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .btn-small, .btn {
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .main-content {
+                    padding: 60px 10px 10px;
+                }
+
+                .header h1 {
+                    font-size: 20px;
+                }
+
+                table {
+                    min-width: 500px;
+                }
+
+                table th, table td {
+                    padding: 8px 6px;
+                    font-size: 12px;
+                }
+            }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+    <div class="mobile-overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <h2>🎯 Affluence Admin</h2>
+            <ul class="sidebar-menu">
+                <li><a href="admin-dashboard.html">📊 Dashboard</a></li>
+                <li><a href="admin-users.html" class="active">👥 Users</a></li>
+                <li><a href="admin-coupons.html">🎟️ Coupons</a></li>
+                <li><a href="admin-articles.html">📰 Articles</a></li>
+                <li><a href="admin-cards.html">🎴 Cards</a></li>
+                <li><a href="admin-withdrawals.html">💰 Withdrawals</a></li>
+                <li><a href="admin-announcements.html">📢 Announcements</a></li>
+                <li><a href="admin-logs.html">📝 System Logs</a></li>
+            </ul>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1>👥 User Management</h1>
+            </div>
+
+            <div class="filters">
+                <select id="roleFilter" onchange="loadUsers()">
+                    <option value="">All Roles</option>
+                    <option value="USER">Users</option>
+                    <option value="SUBADMIN">Sub-Admins</option>
+                    <option value="ADMIN">Admins</option>
+                </select>
+            </div>
+
+            <div class="content-section">
+                <div id="usersTable">
+                    <div class="loading">Loading users...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        let isAdminUser = false;
+        // Fallback: if adminAPI didn't attach, shim minimal functions using global api
+        (function ensureAdminAPI(){
+            if (typeof window.adminAPI === 'undefined' && typeof window.api !== 'undefined') {
+                window.adminAPI = {
+                    getUsers: async (skip = 0, limit = 100, role = null) => {
+                        let url = `/admin/users?skip=${skip}&limit=${limit}`;
+                        if (role) url += `&role=${role}`;
+                        return await window.api.get(url);
+                    },
+                    updateUserRole: async (userId, role) => window.api.put(`/admin/users/${userId}/role`, { role }),
+                    updateUserStatus: async (userId, isActive) => window.api.put(`/admin/users/${userId}/status`, { is_active: isActive }),
+                    deleteUser: async (userId) => window.api.delete(`/admin/users/${userId}`),
+                    impersonateUser: async (userId) => window.api.post(`/admin/impersonate/${userId}`)
+                };
+                console.debug('[admin-users] Applied adminAPI fallback shim');
+            }
+        })();
+
+        // Ensure admin auth before loading page data
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('affluence_token');
+            if (!token) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            try {
+                const me = await api.get('/users/me');
+                const role = (me.role || '').toLowerCase();
+                isAdminUser = (role === 'admin');
+                if (role !== 'admin' && role !== 'subadmin') {
+                    // Not authorized for admin pages
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } catch (e) {
+                // Token invalid/expired
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            // Auth OK, load users
+            if (typeof window.adminAPI === 'undefined') {
+                console.error('adminAPI is not available');
+                document.getElementById('usersTable').innerHTML = '<p style="color:red;">Failed to load users: adminAPI not available</p>';
+                return;
+            }
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            try {
+                const roleFilter = document.getElementById('roleFilter').value;
+                const users = await adminAPI.getUsers(0, 100, roleFilter || null);
+
+                if (users.length === 0) {
+                    document.getElementById('usersTable').innerHTML = '<p style="text-align: center; color: #718096;">No users found</p>';
+                    return;
+                }
+
+                const tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Total Balance</th>
+                                <th>Referrals</th>
+                                <th>Articles</th>
+                                <th>Earned</th>
+                                <th>Status</th>
+                                ${isAdminUser ? '<th>Actions</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(user => `
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 600;">${user.username}</div>
+                                        <div style="font-size: 12px; color: #718096;">${user.full_name}</div>
+                                    </td>
+                                    <td>${user.email}</td>
+                                    <td><span class="badge badge-${user.role.toLowerCase()}">${user.role}</span></td>
+                                    <td>₦${Number(user.total_balance).toFixed(0)}</td>
+                                    <td>${user.total_referrals}</td>
+                                    <td>${user.completed_articles}</td>
+                                    <td>₦${Number(user.total_earned).toFixed(0)}</td>
+                                    <td>
+                                        <span class="badge badge-active">Active</span>
+                                    </td>
+                                    ${isAdminUser ? `
+                                    <td>
+                                        <div class="action-btns">
+                                            <button class="btn-small btn-login" onclick="loginAsUser(${user.user_id}, '${user.username}')">Login As</button>
+                                            ${user.role === 'user' ? `
+                                                <button class="btn-small btn-promote" onclick="promoteToSubadmin(${user.user_id}, '${user.username}')">Make Sub-Admin</button>
+                                            ` : ''}
+                                            ${user.role === 'subadmin' ? `
+                                                <button class="btn-small btn-disable" onclick="demoteToUser(${user.user_id}, '${user.username}')">Remove Sub-Admin</button>
+                                            ` : ''}
+                                            <button class="btn-small btn-disable" onclick="toggleUserStatus(${user.user_id}, true)">Disable</button>
+                                            <button class="btn-small btn-delete" onclick="deleteUserConfirm(${user.user_id}, '${user.username}')">Delete</button>
+                                        </div>
+                                    </td>` : ''}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('usersTable').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading users:', error);
+                const msg = (error && error.message) ? error.message : 'Failed to load users';
+                document.getElementById('usersTable').innerHTML = `<p style="color: red;">Failed to load users: ${msg}</p>`;
+            }
+        }
+
+        function changeRole(userId, currentRole) {
+            showFormModal('Change User Role', [
+                {
+                    name: 'role',
+                    label: 'New Role',
+                    type: 'select',
+                    value: currentRole,
+                    required: true,
+                    options: [
+                        { value: 'USER', label: 'User' },
+                        { value: 'SUBADMIN', label: 'Sub-Admin (Vendor)' },
+                        { value: 'ADMIN', label: 'Admin' }
+                    ]
+                }
+            ], async (data) => {
+                try {
+                    await adminAPI.updateUserRole(userId, data.role);
+                    showToast('User role updated successfully!', 'success');
+                    loadUsers();
+                } catch (error) {
+                    showToast('Failed to update user role: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function toggleUserStatus(userId, disable) {
+            try {
+                await adminAPI.updateUserStatus(userId, !disable);
+                showToast(`User ${disable ? 'disabled' : 'enabled'} successfully!`, 'success');
+                loadUsers();
+            } catch (error) {
+                showToast('Failed to update user status: ' + error.message, 'error');
+            }
+        }
+
+        async function promoteToSubadmin(userId, username) {
+            try {
+                await adminAPI.updateUserRole(userId, 'SUBADMIN');
+                showToast(`${username} is now a Sub-Admin (Vendor).`, 'success');
+                loadUsers();
+            } catch (error) {
+                showToast('Failed to promote user: ' + error.message, 'error');
+            }
+        }
+
+        async function demoteToUser(userId, username) {
+            try {
+                await adminAPI.updateUserRole(userId, 'USER');
+                showToast(`${username} has been removed from Sub-Admins.`, 'success');
+                loadUsers();
+            } catch (error) {
+                showToast('Failed to demote user: ' + error.message, 'error');
+            }
+        }
+
+        function deleteUserConfirm(userId, username) {
+            showModal(
+                'Delete User',
+                `Are you sure you want to delete user <strong>${username}</strong>? This action cannot be undone.`,
+                async () => {
+                    try {
+                        await adminAPI.deleteUser(userId);
+                        showToast('User deleted successfully!', 'success');
+                        loadUsers();
+                    } catch (error) {
+                        showToast('Failed to delete user: ' + error.message, 'error');
+                    }
+                }
+            );
+        }
+
+        async function loginAsUser(userId, username) {
+            if (!confirm(`Login as ${username}?\n\nYou will be logged into their account. Your admin session will be saved.`)) {
+                return;
+            }
+
+            try {
+                // Save current admin token
+                const adminToken = localStorage.getItem('affluence_token');
+                if (adminToken) {
+                    sessionStorage.setItem('admin_return_token', adminToken);
+                }
+
+                // Get impersonation token
+                const response = await adminAPI.impersonateUser(userId);
+                
+                // Set new token
+                localStorage.setItem('affluence_token', response.access_token);
+                
+                // Show success and redirect
+                showToast(`Logging in as ${username}...`, 'success');
+                
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 1000);
+            } catch (error) {
+                showToast('Failed to login as user: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('affluence_token');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking a link
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        toggleMobileMenu();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

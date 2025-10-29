@@ -1,0 +1,277 @@
+/* Affluence Admin Panel - Mobile Responsive Styles */
+
+/* Mobile-first media queries */
+@media (max-width: 1024px) {
+    /* Layout adjustments */
+    .admin-layout {
+        flex-direction: column;
+    }
+    
+    .content-area,
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+        padding: 15px !important;
+    }
+    
+    /* Sidebar adjustments */
+    .sidebar {
+        width: 280px;
+        left: -280px;
+        box-shadow: var(--shadow-lg);
+        z-index: 1000;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    /* Show mobile menu button */
+    .mobile-menu-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Show mobile overlay when sidebar is active */
+    .mobile-overlay.active {
+        display: block;
+    }
+    
+    /* Header adjustments */
+    .content-header {
+        flex-direction: row;
+        gap: 15px;
+        align-items: center !important;
+        flex-wrap: wrap;
+    }
+    
+    .header-title {
+        flex: 1;
+    }
+    
+    .header-title h1 {
+        font-size: 20px !important;
+    }
+    
+    .header-title p {
+        font-size: 12px !important;
+    }
+    
+    .header-actions {
+        flex-wrap: wrap;
+    }
+    
+    /* Grid and table adjustments */
+    .dashboard-stats, 
+    .user-stats {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Table responsiveness */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Form adjustments */
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .form-group {
+        width: 100% !important;
+    }
+    
+    /* Modal adjustments */
+    .modal {
+        width: 95% !important;
+        max-height: 85vh !important;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 640px) {
+    /* Further adjustments for very small screens */
+    .stat-card .stat-value {
+        font-size: 1.4em !important;
+    }
+    
+    .stat-card {
+        padding: 12px !important;
+    }
+    
+    .btn {
+        padding: 8px 12px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Make tables more readable on small devices */
+    .table-responsive table {
+        min-width: 600px;
+    }
+    
+    /* User menu adjustments */
+    .user-menu {
+        gap: 8px !important;
+    }
+    
+    .user-avatar {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    /* Tab adjustments for small screens */
+    .tabs {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .tab-item {
+        flex: 1 1 auto;
+        min-width: 80px;
+        text-align: center;
+    }
+    
+    /* Form and filter adjustments */
+    .users-filters {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-group {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    /* Make actions in tables stack vertically */
+    .action-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* Add classes to make tables responsive */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* Utility classes */
+.d-none-mobile {
+    display: none !important;
+}
+
+.d-block-mobile {
+    display: block !important;
+}
+
+/* Apply to all tables for better mobile view */
+@media (max-width: 1024px) {
+    table {
+        width: 100%;
+    }
+    
+    .table-wrapper {
+        position: relative;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Add horizontal scroll indicator */
+    .scroll-indicator {
+        display: none;
+        padding: 5px 10px;
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary);
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    
+    @media (max-width: 1024px) {
+        .scroll-indicator {
+            display: block;
+        }
+    }
+}
+
+/* Fluid pagination */
+@media (max-width: 640px) {
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination button {
+        margin: 2px;
+        padding: 6px 10px !important;
+    }
+}
+
+/* Mobile-friendly forms */
+@media (max-width: 1024px) {
+    .form-layout {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+/* Make modals mobile-friendly */
+@media (max-width: 1024px) {
+    .modal {
+        width: 90% !important;
+        max-height: 80vh !important;
+    }
+    
+    .modal-footer {
+        flex-direction: column-reverse;
+    }
+    
+    .modal-footer button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Fix for fixed elements and iOS overflow issues */
+@supports (-webkit-touch-callout: none) {
+    .modal, .sidebar {
+        /* iOS-specific fix for fixed position elements */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+}
+
+/* JavaScript-ready classes */
+.sidebar-closed .sidebar {
+    left: -280px;
+}
+
+.sidebar-closed .content-area {
+    margin-left: 0;
+}
+
+.sidebar-open .sidebar {
+    left: 0;
+}
+
+.sidebar-open .mobile-overlay {
+    display: block;
+}

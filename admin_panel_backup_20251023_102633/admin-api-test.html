@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2563eb;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .info {
+            background-color: #e8f4fd;
+            border: 1px solid #a8d4f8;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin API Test Tool</h1>
+    <p>This tool tests direct API access to diagnose backend connection issues</p>
+    
+    <div class="warning">
+        <strong>IMPORTANT:</strong> You need to be logged in as an admin user for these tests to work.
+        <br>If you're not logged in, please <a href="admin-login.html">login</a> first.
+    </div>
+    
+    <div class="test-section">
+        <h2>API Configuration</h2>
+        <div id="config-details"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test API Base URL</h2>
+        <p>These tests check if the API base URL is correctly detected</p>
+        <div class="button-row">
+            <button onclick="testApiBase()">Test API Base</button>
+            <button onclick="testRootEndpoint()">Test Root Endpoint</button>
+            <button onclick="testHealthEndpoint()">Test Health Endpoint</button>
+        </div>
+        <div id="api-base-result" class="result">Results will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Admin Endpoints</h2>
+        <p>These tests check if the admin API endpoints are correctly working</p>
+        <div class="button-row">
+            <button onclick="testAdminEndpoint('/api/admin/dashboard')">Test /api/admin/dashboard</button>
+            <button onclick="testAdminEndpoint('/api/admin/users')">Test /api/admin/users</button>
+            <button onclick="testAdminEndpoint('/api/admin/coupons')">Test /api/admin/coupons</button>
+        </div>
+        <div class="info">
+            These tests use direct fetch with the full URL path (no api.js wrapper)
+        </div>
+        <div id="admin-endpoint-result" class="result">Results will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Admin API Wrapper</h2>
+        <p>These tests check if the adminAPI wrapper is correctly configured</p>
+        <div class="button-row">
+            <button onclick="testAdminApiWrapper('getDashboard')">Test getDashboard()</button>
+            <button onclick="testAdminApiWrapper('getUsers')">Test getUsers()</button>
+            <button onclick="testAdminApiWrapper('getCoupons')">Test getCoupons()</button>
+        </div>
+        <div class="info">
+            These tests use the adminAPI wrapper from admin.js
+        </div>
+        <div id="admin-api-result" class="result">Results will appear here...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Diagnostics</h2>
+        <div class="button-row">
+            <button onclick="checkApiToken()">Check API Token</button>
+            <button onclick="checkRoutes()">Check Router Configuration</button>
+            <button onclick="fixApiBase()">Fix API Base URL</button>
+        </div>
+        <div id="diagnostics-result" class="result">Results will appear here...</div>
+    </div>
+
+    <!-- Load the API scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <script>
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            showApiConfig();
+        });
+        
+        // Show API configuration
+        function showApiConfig() {
+            const configEl = document.getElementById('config-details');
+            const api = new AffluenceAPI();
+            
+            let html = `
+                <p><strong>API Base URL:</strong> ${api.baseURL}</p>
+                <p><strong>API Token Exists:</strong> ${!!api.getToken()}</p>
+                <p><strong>adminAPI Available:</strong> ${typeof adminAPI !== 'undefined'}</p>
+                <p><strong>Browser Info:</strong> ${navigator.userAgent}</p>
+            `;
+            
+            configEl.innerHTML = html;
+        }
+        
+        // Test API base URL
+        async function testApiBase() {
+            const resultEl = document.getElementById('api-base-result');
+            resultEl.textContent = 'Testing API base URL...';
+            
+            try {
+                const apiBase = detectApiBase();
+                
+                let html = `API Base detected as: ${apiBase}\n\n`;
+                html += `Checking if the API base is valid...\n`;
+                
+                const testUrl = `${apiBase}`;
+                const response = await fetch(testUrl);
+                const status = response.status;
+                
+                html += `Status code: ${status} (${response.statusText})\n`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    html += `Response: ${JSON.stringify(data, null, 2)}\n`;
+                    html += `\n✅ API base URL is valid!`;
+                } else {
+                    html += `\n❌ API base URL returned an error!`;
+                }
+                
+                resultEl.textContent = html;
+            } catch (error) {
+                resultEl.textContent = `Error testing API base URL: ${error.message}`;
+            }
+        }
+        
+        // Test root endpoint
+        async function testRootEndpoint() {
+            const resultEl = document.getElementById('api-base-result');
+            resultEl.textContent = 'Testing root endpoint...';
+            
+            try {
+                const apiBase = detectApiBase();
+                const rootUrl = apiBase.replace(/\/api$/, '');
+                
+                let html = `Testing root endpoint: ${rootUrl}\n\n`;
+                
+                const response = await fetch(rootUrl);
+                const status = response.status;
+                
+                html += `Status code: ${status} (${response.statusText})\n`;
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    html += `Response (first 200 chars): ${data.substring(0, 200)}...\n`;
+                    html += `\n✅ Root endpoint is accessible!`;
+                } else {
+                    html += `\n❌ Root endpoint returned an error!`;
+                }
+                
+                resultEl.textContent = html;
+            } catch (error) {
+                resultEl.textContent = `Error testing root endpoint: ${error.message}`;
+            }
+        }
+        
+        // Test health endpoint
+        async function testHealthEndpoint() {
+            const resultEl = document.getElementById('api-base-result');
+            resultEl.textContent = 'Testing health endpoint...';
+            
+            try {
+                const apiBase = detectApiBase();
+                const healthUrl = `${apiBase}/health`;
+                
+                let html = `Testing health endpoint: ${healthUrl}\n\n`;
+                
+                const response = await fetch(healthUrl);
+                const status = response.status;
+                
+                html += `Status code: ${status} (${response.statusText})\n`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    html += `Response: ${JSON.stringify(data, null, 2)}\n`;
+                    html += `\n✅ Health endpoint is working!`;
+                } else {
+                    html += `\n❌ Health endpoint returned an error!`;
+                }
+                
+                resultEl.textContent = html;
+            } catch (error) {
+                resultEl.textContent = `Error testing health endpoint: ${error.message}`;
+            }
+        }
+        
+        // Test admin endpoint directly
+        async function testAdminEndpoint(endpoint) {
+            const resultEl = document.getElementById('admin-endpoint-result');
+            resultEl.textContent = `Testing admin endpoint: ${endpoint}...`;
+            
+            try {
+                const token = localStorage.getItem('affluence_token');
+                
+                if (!token) {
+                    resultEl.textContent = 'No authentication token found. Please login first.';
+                    return;
+                }
+                
+                // Get the full API URL
+                const apiBase = detectApiBase().replace(/\/api$/, '');
+                const fullUrl = `${apiBase}${endpoint}`;
+                
+                let html = `Testing admin endpoint: ${fullUrl}\n\n`;
+                
+                const response = await fetch(fullUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const status = response.status;
+                html += `Status code: ${status} (${response.statusText})\n`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    html += `Response (sample): ${JSON.stringify(data).substring(0, 200)}...\n`;
+                    html += `\n✅ Admin endpoint is working!`;
+                } else {
+                    const text = await response.text();
+                    html += `Error response: ${text}\n`;
+                    html += `\n❌ Admin endpoint returned an error!`;
+                }
+                
+                resultEl.textContent = html;
+            } catch (error) {
+                resultEl.textContent = `Error testing admin endpoint: ${error.message}`;
+            }
+        }
+        
+        // Test adminAPI wrapper
+        async function testAdminApiWrapper(method) {
+            const resultEl = document.getElementById('admin-api-result');
+            
+            if (typeof adminAPI === 'undefined') {
+                resultEl.textContent = 'adminAPI is not defined! Make sure admin.js is loaded.';
+                return;
+            }
+            
+            resultEl.textContent = `Testing adminAPI.${method}()...`;
+            
+            try {
+                let result;
+                
+                switch (method) {
+                    case 'getDashboard':
+                        result = await adminAPI.getDashboard();
+                        break;
+                    case 'getUsers':
+                        result = await adminAPI.getUsers();
+                        break;
+                    case 'getCoupons':
+                        result = await adminAPI.getCoupons();
+                        break;
+                    default:
+                        resultEl.textContent = `Unknown method: ${method}`;
+                        return;
+                }
+                
+                resultEl.textContent = `adminAPI.${method}() succeeded!\n\nResult (sample): ${JSON.stringify(result).substring(0, 300)}...`;
+            } catch (error) {
+                resultEl.textContent = `Error testing adminAPI.${method}(): ${error.message}`;
+            }
+        }
+        
+        // Check API token
+        function checkApiToken() {
+            const resultEl = document.getElementById('diagnostics-result');
+            const token = localStorage.getItem('affluence_token');
+            
+            if (!token) {
+                resultEl.textContent = '❌ No token found in localStorage. Please login first.';
+                return;
+            }
+            
+            // Basic JWT check
+            const parts = token.split('.');
+            
+            if (parts.length !== 3) {
+                resultEl.textContent = '❌ Token is not a valid JWT format.';
+                return;
+            }
+            
+            try {
+                // Decode the payload (middle part)
+                const payload = JSON.parse(atob(parts[1]));
+                
+                let html = '✅ Token exists and is valid JWT format.\n\n';
+                html += `Token expires: ${new Date(payload.exp * 1000).toLocaleString()}\n`;
+                html += `User ID: ${payload.sub}\n`;
+                html += `Role: ${payload.role || 'Not specified'}\n`;
+                
+                // Check if token is expired
+                if (payload.exp < Date.now() / 1000) {
+                    html += '\n❌ Token is expired! Please login again.';
+                } else {
+                    html += '\n✅ Token is not expired.';
+                }
+                
+                resultEl.textContent = html;
+            } catch (error) {
+                resultEl.textContent = `Error decoding token: ${error.message}`;
+            }
+        }
+        
+        // Check router configuration
+        function checkRoutes() {
+            const resultEl = document.getElementById('diagnostics-result');
+            const api = new AffluenceAPI();
+            
+            let html = 'Router Configuration Analysis:\n\n';
+            html += `API Base URL: ${api.baseURL}\n`;
+            html += `Expected Admin Dashboard Endpoint: ${api.baseURL}/admin/dashboard\n`;
+            html += `FastAPI Router Prefix: /api/admin\n\n`;
+            
+            // Check for potential issues
+            if (api.baseURL.endsWith('/api')) {
+                html += '⚠️ Potential issue detected:\n';
+                html += 'The API base URL already includes "/api" but FastAPI router also has "/api/admin" prefix.\n';
+                html += 'This could lead to duplicate "/api" in the URL path.\n\n';
+                html += 'Recommendation: Either remove "/api" from base URL or from FastAPI router prefix.\n';
+            } else {
+                html += '✅ API base URL does not have duplicate prefix issues.\n';
+            }
+            
+            resultEl.textContent = html;
+        }
+        
+        // Fix API base URL
+        function fixApiBase() {
+            const resultEl = document.getElementById('diagnostics-result');
+            const currentBase = detectApiBase();
+            
+            if (currentBase.endsWith('/api')) {
+                // Fix the double API issue by removing the trailing /api
+                const fixedBase = currentBase.replace(/\/api$/, '');
+                localStorage.setItem('affluence_api_base', fixedBase);
+                
+                resultEl.textContent = `✅ Fixed API base URL.\n\nOld: ${currentBase}\nNew: ${fixedBase}\n\nPlease refresh the page to apply the changes.`;
+                
+                // Show reload button
+                const reloadBtn = document.createElement('button');
+                reloadBtn.textContent = 'Reload Page';
+                reloadBtn.onclick = () => location.reload();
+                reloadBtn.style.marginTop = '10px';
+                resultEl.appendChild(reloadBtn);
+            } else {
+                resultEl.textContent = `No fix needed. Current API base URL (${currentBase}) doesn't have the double "/api" issue.`;
+            }
+        }
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + \'/dashboard\', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

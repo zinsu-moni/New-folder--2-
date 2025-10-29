@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Endpoint Test</title>
+    
+    <!-- API Base URL Configuration -->
+    <meta name="api-base" content="http://localhost:8000/api">
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9fafb;
+            color: #1e293b;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin-top: 0;
+            color: #4f46e5;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        h2 {
+            margin-top: 0;
+            color: #4f46e5;
+        }
+        
+        .test-buttons {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .test-button {
+            padding: 8px 16px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .test-button:hover {
+            background-color: #4338ca;
+        }
+        
+        .output-container {
+            margin-top: 15px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 10px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow: auto;
+        }
+        
+        .output {
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #10b981;
+        }
+        
+        .error {
+            color: #ef4444;
+        }
+        
+        .warning {
+            color: #f97316;
+        }
+        
+        .path-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .path-table th, .path-table td {
+            border: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        .path-table th {
+            background-color: #f8fafc;
+        }
+        
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .error-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+        
+        .success-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            background-color: #d1fae5;
+            color: #047857;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Endpoint Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Check API Configuration</h2>
+            <div id="config-output" class="output-container">
+                <div class="output">Click "Check Configuration" to test API setup...</div>
+            </div>
+            <div class="test-buttons">
+                <button class="test-button" onclick="checkApiConfig()">Check Configuration</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Test Path Construction</h2>
+            <p>This test shows how different API paths are constructed by the <code>adminPath()</code> function.</p>
+            <table class="path-table">
+                <thead>
+                    <tr>
+                        <th>Input Path</th>
+                        <th>Output Path</th>
+                        <th>Final API URL</th>
+                    </tr>
+                </thead>
+                <tbody id="path-table-body">
+                    <!-- Rows will be filled dynamically -->
+                </tbody>
+            </table>
+            <div class="test-buttons">
+                <button class="test-button" onclick="testPathConstruction()">Test Path Construction</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Test API Endpoints</h2>
+            <div class="test-buttons">
+                <button class="test-button" onclick="testEndpoint('/admin/dashboard', 'dashboard')">Test /admin/dashboard</button>
+                <button class="test-button" onclick="testEndpoint('/admin/users', 'users')">Test /admin/users</button>
+                <button class="test-button" onclick="testDirectEndpoint('/api/admin/dashboard', 'direct-dashboard')">Direct /api/admin/dashboard</button>
+                <button class="test-button" onclick="testDirectEndpoint('/api/admin/users', 'direct-users')">Direct /api/admin/users</button>
+                <button class="test-button" onclick="testDirectEndpoint('/api/users', 'direct-regular-users')">Direct /api/users</button>
+            </div>
+            <div id="endpoint-output" class="output-container">
+                <div class="output">Select an endpoint to test...</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Fix Recommendations</h2>
+            <div id="recommendations">
+                <p>After running the tests above, recommendations will appear here...</p>
+            </div>
+            <div class="test-buttons">
+                <button class="test-button" onclick="generateRecommendations()">Generate Recommendations</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Include API and Admin Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    
+    <script>
+        // Store test results
+        const testResults = {
+            configOk: false,
+            pathConstructionOk: false,
+            adminDashboardOk: false,
+            adminUsersOk: false,
+            directDashboardOk: false,
+            directUsersOk: false,
+            directRegularUsersOk: false
+        };
+        
+        // Check API Configuration
+        async function checkApiConfig() {
+            const outputEl = document.getElementById('config-output');
+            outputEl.innerHTML = '<div class="output">Checking API configuration...</div>';
+            
+            try {
+                const config = {
+                    baseURL: api.baseURL,
+                    token: api.getToken() ? 'Present (hidden for security)' : 'Not found',
+                    isAuthenticated: api.isAuthenticated(),
+                    adminAPI: typeof adminAPI !== 'undefined'
+                };
+                
+                let output = `<div class="output">
+<span class="success">✓ API base URL:</span> ${config.baseURL}
+<span class="success">✓ Authentication:</span> ${config.isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
+<span class="${config.token ? 'success' : 'error'}">✓ Token:</span> ${config.token ? 'Present' : 'Not found'}
+<span class="${config.adminAPI ? 'success' : 'error'}">✓ adminAPI:</span> ${config.adminAPI ? 'Available' : 'Not Available'}
+</div>`;
+                
+                outputEl.innerHTML = output;
+                testResults.configOk = config.isAuthenticated && config.adminAPI;
+            } catch (error) {
+                outputEl.innerHTML = `<div class="output error">Error checking API configuration: ${error.message}</div>`;
+            }
+        }
+        
+        // Test Path Construction
+        function testPathConstruction() {
+            const tableBody = document.getElementById('path-table-body');
+            tableBody.innerHTML = '';
+            
+            if (typeof adminPath !== 'function') {
+                tableBody.innerHTML = `<tr><td colspan="3" class="error">adminPath function is not available. Make sure admin.js is loaded properly.</td></tr>`;
+                return;
+            }
+            
+            const testCases = [
+                '/dashboard',
+                'dashboard',
+                '/users',
+                'users',
+                '/admin/dashboard',
+                'admin/dashboard',
+                '/admin/users',
+                'admin/users'
+            ];
+            
+            let allPathsCorrect = true;
+            
+            testCases.forEach(path => {
+                const outputPath = adminPath(path);
+                const finalUrl = api.baseURL + outputPath;
+                
+                // Check if path is correctly formed
+                const isCorrect = outputPath.startsWith('/admin/') || outputPath === '/admin';
+                if (!isCorrect) allPathsCorrect = false;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><code>${path}</code></td>
+                    <td><code>${outputPath}</code> ${isCorrect ? '<span class="success-badge">Correct</span>' : '<span class="error-badge">Missing /admin prefix</span>'}</td>
+                    <td><code>${finalUrl}</code></td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            testResults.pathConstructionOk = allPathsCorrect;
+        }
+        
+        // Test API endpoint using adminAPI
+        async function testEndpoint(path, outputId) {
+            const finalOutputId = outputId || 'endpoint-output';
+            const outputEl = document.getElementById(finalOutputId);
+            outputEl.innerHTML = `<div class="output">Testing ${path}...</div>`;
+            
+            if (typeof adminPath !== 'function') {
+                outputEl.innerHTML = `<div class="output error">adminPath function is not available. Make sure admin.js is loaded properly.</div>`;
+                return;
+            }
+            
+            try {
+                // This will use adminPath to construct the final URL
+                const finalPath = adminPath(path);
+                outputEl.innerHTML += `<div class="output">Using adminPath to generate URL: ${finalPath}</div>`;
+                
+                const response = await api.get(finalPath);
+                
+                outputEl.innerHTML = `<div class="output success">
+<strong>Success! Endpoint ${path} is working.</strong>
+Final path used: <code>${finalPath}</code>
+Final URL: <code>${api.baseURL}${finalPath}</code>
+
+Response (sample):
+${JSON.stringify(Array.isArray(response) && response.length > 2 ? response.slice(0, 2) : response, null, 2)}
+</div>`;
+                
+                if (path.includes('/dashboard')) testResults.adminDashboardOk = true;
+                if (path.includes('/users')) testResults.adminUsersOk = true;
+            } catch (error) {
+                outputEl.innerHTML = `<div class="output error">
+<strong>Error testing ${path}</strong>
+Final path used: <code>${adminPath(path)}</code>
+Final URL: <code>${api.baseURL}${adminPath(path)}</code>
+
+Error: ${error.message}
+${error.status ? `Status code: ${error.status}` : ''}
+${error.data ? `Error data: ${JSON.stringify(error.data, null, 2)}` : ''}
+</div>`;
+                
+                if (path.includes('/dashboard')) testResults.adminDashboardOk = false;
+                if (path.includes('/users')) testResults.adminUsersOk = false;
+            }
+        }
+        
+        // Test direct API endpoint (bypass adminPath)
+        async function testDirectEndpoint(directPath, outputId) {
+            const finalOutputId = outputId || 'endpoint-output';
+            const outputEl = document.getElementById(finalOutputId);
+            outputEl.innerHTML = `<div class="output">Testing direct path ${directPath}...</div>`;
+            
+            try {
+                const response = await fetch(directPath, {
+                    headers: {
+                        'Authorization': `Bearer ${api.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                outputEl.innerHTML = `<div class="output ${response.ok ? 'success' : 'error'}">
+<strong>${response.ok ? 'Success!' : 'Error'} Direct endpoint ${directPath} returned ${response.status}</strong>
+
+Response (sample):
+${JSON.stringify(Array.isArray(data) && data.length > 2 ? data.slice(0, 2) : data, null, 2)}
+</div>`;
+                
+                if (directPath.includes('/api/admin/dashboard')) testResults.directDashboardOk = response.ok;
+                if (directPath.includes('/api/admin/users')) testResults.directUsersOk = response.ok;
+                if (directPath.includes('/api/users') && !directPath.includes('/admin')) testResults.directRegularUsersOk = response.ok;
+            } catch (error) {
+                outputEl.innerHTML = `<div class="output error">
+<strong>Error testing direct path ${directPath}</strong>
+
+Error: ${error.message}
+</div>`;
+                
+                if (directPath.includes('/api/admin/dashboard')) testResults.directDashboardOk = false;
+                if (directPath.includes('/api/admin/users')) testResults.directUsersOk = false;
+                if (directPath.includes('/api/users') && !directPath.includes('/admin')) testResults.directRegularUsersOk = false;
+            }
+        }
+        
+        // Generate recommendations based on test results
+        function generateRecommendations() {
+            const recsEl = document.getElementById('recommendations');
+            
+            // Make sure we've run the tests
+            if (!Object.values(testResults).some(v => v)) {
+                recsEl.innerHTML = '<p class="warning">Please run the tests first before generating recommendations.</p>';
+                return;
+            }
+            
+            let recommendations = [];
+            
+            // Check API configuration
+            if (!testResults.configOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="error">API Configuration Issue</h3>
+                        <p>The API is not properly configured or you're not authenticated. Please:</p>
+                        <ul>
+                            <li>Ensure you're logged in as an admin</li>
+                            <li>Check that the API base URL is correct</li>
+                            <li>Verify that js/api.js and js/admin.js are properly loaded</li>
+                        </ul>
+                    </div>
+                `);
+            }
+            
+            // Check path construction
+            if (!testResults.pathConstructionOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="error">Path Construction Issue</h3>
+                        <p>The <code>adminPath()</code> function is not correctly adding the <code>/admin</code> prefix to all paths. Fix the function in admin.js:</p>
+                        <pre style="background:#f1f5f9;padding:10px;border-radius:4px;overflow:auto">function adminPath(path) {
+    // Add leading slash if missing
+    if (!path.startsWith('/')) {
+        path = '/' + path;
+    }
+    
+    // Always add the /admin prefix if it's missing
+    if (!path.startsWith('/admin/') && path !== '/admin') {
+        path = '/admin' + path;
+    }
+    
+    return path;
+}</pre>
+                    </div>
+                `);
+            }
+            
+            // Check endpoint results
+            if (testResults.directDashboardOk && !testResults.adminDashboardOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="error">Dashboard Endpoint Issue</h3>
+                        <p>The direct API call to <code>/api/admin/dashboard</code> works, but the adminAPI call fails. This indicates a problem with how adminAPI is constructing the URL.</p>
+                    </div>
+                `);
+            }
+            
+            if (testResults.directUsersOk && !testResults.adminUsersOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="error">Users Endpoint Issue</h3>
+                        <p>The direct API call to <code>/api/admin/users</code> works, but the adminAPI call fails. This indicates a problem with how adminAPI is constructing the URL.</p>
+                    </div>
+                `);
+            }
+            
+            if (testResults.directRegularUsersOk && !testResults.adminUsersOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="warning">Endpoints Confusion</h3>
+                        <p>The regular users endpoint <code>/api/users</code> is accessible, but the admin users endpoint is not. Your code might be accessing the wrong endpoint. Make sure you're using <code>/api/admin/users</code> for admin functions.</p>
+                    </div>
+                `);
+            }
+            
+            if (!testResults.directDashboardOk && !testResults.directUsersOk) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="error">Backend API Issue</h3>
+                        <p>Direct calls to the backend API endpoints are failing. This could indicate:</p>
+                        <ul>
+                            <li>The backend server is not running</li>
+                            <li>Authentication issues (invalid or expired token)</li>
+                            <li>CORS issues preventing browser access</li>
+                            <li>Backend route configuration issues</li>
+                        </ul>
+                    </div>
+                `);
+            }
+            
+            if (recommendations.length === 0) {
+                recommendations.push(`
+                    <div>
+                        <h3 class="success">All Tests Passed!</h3>
+                        <p>The API configuration and endpoints appear to be working correctly. If you're still experiencing issues, check:</p>
+                        <ul>
+                            <li>Backend error logs for more details</li>
+                            <li>The browser console for JavaScript errors</li>
+                            <li>The data format expected by your frontend components</li>
+                        </ul>
+                    </div>
+                `);
+            }
+            
+            recsEl.innerHTML = recommendations.join('');
+        }
+        
+        // Run initial config check
+        document.addEventListener('DOMContentLoaded', () => {
+            checkApiConfig();
+            testPathConstruction();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test - Affluence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .error {
+            color: #e74c3c;
+        }
+        .success {
+            color: #27ae60;
+        }
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        #apiLog {
+            height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Functionality Test</h1>
+    
+    <div class="card">
+        <h2>API Configuration</h2>
+        <div id="apiConfig"></div>
+        <button onclick="testApiConnection()" style="margin-top: 15px;">Test API Connection</button>
+        <div id="connectionResult" style="margin-top: 10px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Login Test</h2>
+        <div class="input-group">
+            <label for="username">Username or Email:</label>
+            <input type="text" id="username" placeholder="Enter username or email">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+        
+        <button onclick="testLogin()">Test Login</button>
+        
+        <div id="loginResult" style="margin-top: 20px;"></div>
+    </div>
+    
+    <div class="card">
+        <h2>API Log</h2>
+        <div id="apiLog"></div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="index.html">Back to Home</a>
+    </div>
+    
+    <!-- API Script -->
+    <script src="js/api.js"></script>
+    
+    <script>
+        // Log original API object
+        console.log('API object from script:', window.api);
+        
+        // Override console.log for API logging
+        const originalConsoleLog = console.log;
+        const logContainer = document.getElementById('apiLog');
+        
+        console.log = function(...args) {
+            // Call original console.log
+            originalConsoleLog.apply(console, args);
+            
+            // Only log API-related messages
+            const message = args.join(' ');
+            if (message.includes('[api.js]')) {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.textContent = message;
+                
+                if (logContainer) {
+                    logContainer.appendChild(logEntry);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            }
+        };
+        
+        // Display API configuration
+        function displayApiConfig() {
+            const api = window.api;
+            const configElement = document.getElementById('apiConfig');
+            
+            if (!api) {
+                configElement.innerHTML = '<p class="error">Error: API object not found!</p>';
+                return;
+            }
+            
+            let configHtml = '<table style="width: 100%">';
+            configHtml += `<tr><td><strong>Base URL:</strong></td><td>${api.baseURL}</td></tr>`;
+            configHtml += `<tr><td><strong>Authenticated:</strong></td><td>${api.isAuthenticated() ? 'Yes' : 'No'}</td></tr>`;
+            configHtml += `<tr><td><strong>Debug Mode:</strong></td><td>${api.debug ? 'Enabled' : 'Disabled'}</td></tr>`;
+            configHtml += '</table>';
+            
+            configElement.innerHTML = configHtml;
+        }
+        
+        // Test login function
+        async function testLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const resultElement = document.getElementById('loginResult');
+            
+            if (!username || !password) {
+                resultElement.innerHTML = '<p class="error">Please enter both username/email and password</p>';
+                return;
+            }
+            
+            resultElement.innerHTML = '<p>Testing login...</p>';
+            
+            try {
+                // Check if API object exists
+                if (!window.api) {
+                    throw new Error('API object not initialized. Check console for errors.');
+                }
+                
+                // Verify login method exists
+                if (typeof window.api.login !== 'function') {
+                    throw new Error('api.login is not a function. API object might be incorrectly initialized.');
+                }
+                
+                // Log API details before login attempt
+                console.log('[api.js] Login test - API object before login:', 
+                    JSON.stringify({
+                        baseURL: window.api.baseURL,
+                        isAuthenticated: window.api.isAuthenticated(),
+                        hasToken: !!window.api.getToken()
+                    })
+                );
+                
+                // Start login
+                console.log(`[api.js] Login test - Attempting login with username: ${username}`);
+                
+                const startTime = performance.now();
+                
+                try {
+                    const loginResult = await window.api.login(username, password);
+                    const endTime = performance.now();
+                    
+                    // Success - show result
+                    resultElement.innerHTML = `
+                        <p class="success">Login successful! (${Math.round(endTime - startTime)}ms)</p>
+                        <pre>${JSON.stringify(loginResult, null, 2)}</pre>
+                        <p style="margin-top: 15px;">JWT Token received and stored. You can now access protected endpoints.</p>
+                        <p><strong>Next steps:</strong></p>
+                        <ul>
+                            <li>Go to <a href="dashboard.html">Dashboard</a></li>
+                            <li>Access <a href="profile.html">Your Profile</a></li>
+                        </ul>
+                    `;
+                    
+                    // Update API config display
+                    displayApiConfig();
+                } catch (loginError) {
+                    // Handle 422 validation errors separately
+                    if (loginError.status === 422) {
+                        const endTime = performance.now();
+                        let validationDetails = '';
+                        
+                        if (loginError.data && loginError.data.detail) {
+                            if (Array.isArray(loginError.data.detail)) {
+                                validationDetails = loginError.data.detail.map(err => 
+                                    `<li><strong>${err.loc.slice(1).join('.')}:</strong> ${err.msg}</li>`
+                                ).join('');
+                            } else {
+                                validationDetails = `<li>${loginError.data.detail}</li>`;
+                            }
+                        }
+                        
+                        // Log the error details for debugging
+                        console.log('Login validation error (422):', loginError.data);
+                        
+                        resultElement.innerHTML = `
+                            <p class="error">Login validation failed (${Math.round(endTime - startTime)}ms)</p>
+                            <div style="margin-top: 10px;">
+                                <p><strong>Validation errors:</strong></p>
+                                <ul>${validationDetails || '<li>Invalid login data</li>'}</ul>
+                            </div>
+                            <div style="margin-top: 15px; background-color: #f8f9fa; padding: 10px; border-radius: 5px;">
+                                <p><strong>What does "422 Unprocessable Content" mean?</strong></p>
+                                <p>This is a standard FastAPI validation error that occurs when:</p>
+                                <ul>
+                                    <li>The email format is invalid</li>
+                                    <li>Required fields are missing (email or password)</li>
+                                    <li>Data format doesn't match what the API expects</li>
+                                </ul>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <p><strong>How to fix:</strong></p>
+                                <ul>
+                                    <li>Make sure you're using a registered email or username</li>
+                                    <li>Ensure your email format is correct (example@domain.com)</li>
+                                    <li>Check that your password is correct and not empty</li>
+                                    <li>Try using the <a href="register.html">registration form</a> if you don't have an account</li>
+                                </ul>
+                            </div>
+                        `;
+                    } else {
+                        // Handle other login errors
+                        const endTime = performance.now();
+                        
+                        // Format error details
+                        let errorDetails = '';
+                        if (loginError.data) {
+                            errorDetails = `<pre>${JSON.stringify(loginError.data, null, 2)}</pre>`;
+                        }
+                        
+                        resultElement.innerHTML = `
+                            <p class="error">Login failed: ${loginError.message || 'Unknown error'} (${Math.round(endTime - startTime)}ms)</p>
+                            ${errorDetails}
+                            <div style="margin-top: 15px;">
+                                <p><strong>Common fixes:</strong></p>
+                                <ul>
+                                    <li>Check your username/email and password</li>
+                                    <li>Make sure your account is active</li>
+                                    <li>Try using the <a href="register.html">registration form</a> if you don't have an account</li>
+                                </ul>
+                            </div>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Login test setup error:', error);
+                
+                resultElement.innerHTML = `
+                    <p class="error">Login test failed: ${error.message || 'Unknown error'}</p>
+                    <div style="margin-top: 10px;">
+                        <p><strong>This appears to be a technical issue:</strong></p>
+                        <ul>
+                            <li>The API service might not be properly initialized</li>
+                            <li>Check the browser console for more detailed error messages</li>
+                            <li>Try refreshing the page</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        // Test API connection function
+        async function testApiConnection() {
+            const resultElement = document.getElementById('connectionResult');
+            resultElement.innerHTML = '<p>Testing API connection...</p>';
+            
+            try {
+                if (!window.api || typeof window.api.testConnection !== 'function') {
+                    throw new Error('API instance not properly initialized');
+                }
+                
+                const isConnected = await window.api.testConnection();
+                
+                if (isConnected) {
+                    resultElement.innerHTML = '<p class="success"><strong>Success:</strong> API connection established!</p>';
+                } else {
+                    resultElement.innerHTML = `
+                        <p class="error"><strong>Error:</strong> Could not connect to API server.</p>
+                        <div style="margin-top: 10px;">
+                            <p><strong>Possible solutions:</strong></p>
+                            <ol>
+                                <li>Make sure the backend server is running</li>
+                                <li>Run <code>start_backend.bat</code> to start the API server</li>
+                                <li>Check if there are any error messages in the backend console</li>
+                            </ol>
+                            <button onclick="testApiConnection()" style="margin-top: 10px;">Retry Connection Test</button>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('API connection test error:', err);
+                resultElement.innerHTML = `
+                    <p class="error"><strong>Error:</strong> ${err.message}</p>
+                    <div style="margin-top: 10px;">
+                        <p><strong>Possible solutions:</strong></p>
+                        <ol>
+                            <li>Make sure the backend server is running</li>
+                            <li>Run <code>start_backend.bat</code> to start the API server</li>
+                            <li>Check if there are any error messages in the backend console</li>
+                        </ol>
+                        <button onclick="testApiConnection()" style="margin-top: 10px;">Retry Connection Test</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            displayApiConfig();
+            
+            // Add event listener for Enter key in password field
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    testLogin();
+                }
+            });
+            
+            // Test API connection on page load
+            testApiConnection();
+        });
+    </script>
+</body>
+</html>

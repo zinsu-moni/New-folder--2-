@@ -1,0 +1,506 @@
+/**
+ * API Configuration and Helper Functions for Affluence Frontend
+ * This file provides the core API functionality for communicating with the backend.
+ */
+
+console.log('[api.js] Initializing API...');
+
+/**
+ * Determine API base URL dynamically based on various sources
+ * @returns {string} The base URL for API calls
+ */
+function detectApiBase() {
+    try {
+        console.log('[api.js] Detecting API base URL...');
+
+        // 1) Explicit global override
+        if (typeof window !== 'undefined' && window.AFFLUENCE_API_BASE) {
+            console.log('[api.js] Using global override:', window.AFFLUENCE_API_BASE);
+            return String(window.AFFLUENCE_API_BASE).replace(/\/$/, '');
+        }
+
+        // 2) Meta tag in <head>: <meta name="api-base" content="https://api.example.com">
+        if (typeof document !== 'undefined') {
+            const meta = document.querySelector('meta[name="api-base"]');
+            if (meta && meta.content) {
+                console.log('[api.js] Using meta tag API base:', meta.content);
+                return String(meta.content).replace(/\/$/, '');
+            }
+        }
+
+        // 3) Local storage override (useful for testing/debugging)
+        const stored = (typeof localStorage !== 'undefined') ? localStorage.getItem('affluence_api_base') : null;
+        if (stored) {
+            console.log('[api.js] Using localStorage API base:', stored);
+            return String(stored).replace(/\/$/, '');
+        }
+
+        // 4) Default to local backend
+        // IMPORTANT: Include /api because backend router uses /api/admin
+        console.log('[api.js] Using default local API base: http://localhost:8000/api');
+        return 'http://localhost:8000/api';
+    } catch (e) {
+        console.error('[api.js] API base detection failed:', e);
+        console.warn('[api.js] Falling back to default: http://localhost:8000/api');
+        return 'http://localhost:8000/api';
+    }
+}
+
+// Detect and log the API base URL
+const detectedApiBase = detectApiBase();
+console.log('[api.js] Final API base URL:', detectedApiBase);
+
+/**
+ * API Configuration Settings
+ */
+const API_CONFIG = {
+    BASE_URL: detectedApiBase,
+    TIMEOUT: 30000, // 30 seconds
+    DEBUG: true     // Enable verbose logging
+};
+
+/**
+ * Main API Class
+ * Handles authentication and API requests to the backend
+ */
+class AffluenceAPI {
+    constructor() {
+        this.baseURL = API_CONFIG.BASE_URL;
+        this.debug = API_CONFIG.DEBUG;
+        
+        try { 
+            this.token = localStorage.getItem('affluence_token');
+            if (this.debug) console.log('[api.js] Token loaded from localStorage:', this.token ? 'Found' : 'Not found'); 
+        } catch (e) { 
+            console.warn('[api.js] Could not access localStorage:', e);
+            this.token = null; 
+        }
+    }
+
+    /**
+     * Set authentication token and store in localStorage
+     * @param {string} token - JWT token for authentication
+     */
+    setToken(token) { 
+        this.token = token; 
+        try { 
+            localStorage.setItem('affluence_token', token); 
+            if (this.debug) console.log('[api.js] Token saved to localStorage');
+        } catch (e) {
+            console.warn('[api.js] Could not save token to localStorage:', e);
+        } 
+    }
+    
+    /**
+     * Get authentication token from memory or localStorage
+     * @returns {string|null} The authentication token or null
+     */
+    getToken() { 
+        try { 
+            return this.token || localStorage.getItem('affluence_token'); 
+        } catch (e) { 
+            console.warn('[api.js] Could not get token from localStorage:', e);
+            return this.token; 
+        } 
+    }
+    
+    /**
+     * Remove authentication token from memory and localStorage
+     */
+    removeToken() { 
+        this.token = null; 
+        try { 
+            localStorage.removeItem('affluence_token'); 
+            if (this.debug) console.log('[api.js] Token removed from localStorage');
+        } catch (e) {
+            console.warn('[api.js] Could not remove token from localStorage:', e);
+        } 
+    }
+    
+    /**
+     * Check if user is authenticated
+     * @returns {boolean} True if authenticated
+     */
+    isAuthenticated() { 
+        return !!this.getToken(); 
+    }
+
+    /**
+     * Make an HTTP request to the API
+     * @param {string} endpoint - API endpoint to call
+     * @param {Object} options - Request options
+     * @returns {Promise<any>} Response data
+     */
+    async request(endpoint, options = {}) {
+        const url = `${this.baseURL}${endpoint}`;
+        const headers = { 
+            'Content-Type': 'application/json', 
+            ...(options.headers || {}) 
+        };
+        
+        // Add auth token if available and not explicitly skipped
+        if (this.getToken() && !options.skipAuth) {
+            headers['Authorization'] = `Bearer ${this.getToken()}`;
+        }
+        const config = {
+            ...options,
+            headers,
+        };
+        
+        if (this.debug) {
+            console.log(`[api.js] ${options.method || 'GET'} request to: ${url}`);
+            console.log(`[api.js] Headers:`, headers);
+            if (options.body) {
+                console.log(`[api.js] Request body:`, options.body);
+            }
+        }
+        
+        // Set up timeout with AbortController
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort();
+            if (this.debug) console.error(`[api.js] Request timed out after ${API_CONFIG.TIMEOUT}ms`);
+        }, API_CONFIG.TIMEOUT);
+        
+        try {
+            // Make the actual request with timeout handling
+            const response = await fetch(url, { 
+                ...config, 
+                signal: controller.signal 
+            });
+            clearTimeout(timeoutId);
+            
+            if (this.debug) {
+                console.log(`[api.js] Response status: ${response.status} ${response.statusText}`);
+                
+                // Debug response headers
+                const responseHeaders = {};
+                response.headers.forEach((value, key) => {
+                    responseHeaders[key] = value;
+                });
+                console.log('[api.js] Response headers:', responseHeaders);
+            }
+
+            // Process response based on content type
+            const contentType = response.headers.get('content-type') || '';
+            let data = null;
+            
+            if (contentType.includes('application/json')) {
+                const text = await response.text();
+                if (this.debug) {
+                    console.log('[api.js] Raw response:', 
+                        text.length > 200 ? text.substring(0, 200) + '...' : text);
+                }
+                
+                try { 
+                    data = JSON.parse(text); 
+                } catch (e) { 
+                    console.error('[api.js] JSON parse error:', e);
+                    data = { message: text }; 
+                }
+            } else {
+                const text = await response.text();
+                data = { message: text };
+                if (this.debug) {
+                    console.warn('[api.js] Response not JSON:', 
+                        text.length > 200 ? text.substring(0, 200) + '...' : text);
+                }
+            }
+
+            // Handle error responses
+            if (!response.ok) {
+                // Handle authentication errors
+                if (response.status === 401) {
+                    console.warn('[api.js] Authentication failed (401), redirecting to login');
+                    this.removeToken();
+                    
+                    // Redirect to appropriate login page
+                    const isAdmin = window.location.pathname.includes('admin-');
+                    window.location.href = isAdmin ? '/admin-login.html' : '/login.html';
+                }
+                
+                // Create error with details from response
+                const errorDetail = (data && data.detail) ? data.detail : 
+                                  (data && data.message) ? data.message : 
+                                  'Request failed';
+                                  
+                const error = new Error(errorDetail);
+                error.status = response.status;
+                error.statusText = response.statusText;
+                error.data = data;
+                
+                throw error;
+            }
+
+            return data;
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err.name === 'AbortError') {
+                console.error(`[api.js] Request timed out after ${API_CONFIG.TIMEOUT}ms`);
+                throw new Error(`Request timed out after ${API_CONFIG.TIMEOUT}ms`);
+            }
+            console.error(`[api.js] Request failed:`, err);
+            throw err;
+        }
+    }
+
+    /**
+     * Make a GET request to the API
+     * @param {string} endpoint - API endpoint
+     * @param {Object} options - Additional request options
+     * @returns {Promise<any>} Response data
+     */
+    async get(endpoint, options = {}) { 
+        return this.request(endpoint, { 
+            ...options, 
+            method: 'GET' 
+        }); 
+    }
+    
+    /**
+     * Make a POST request to the API
+     * @param {string} endpoint - API endpoint
+     * @param {Object} data - Request body data
+     * @param {Object} options - Additional request options
+     * @returns {Promise<any>} Response data
+     */
+    async post(endpoint, data, options = {}) { 
+        return this.request(endpoint, { 
+            ...options,
+            method: 'POST', 
+            body: JSON.stringify(data) 
+        }); 
+    }
+    
+    /**
+     * Make a PUT request to the API
+     * @param {string} endpoint - API endpoint
+     * @param {Object} data - Request body data
+     * @param {Object} options - Additional request options
+     * @returns {Promise<any>} Response data
+     */
+    async put(endpoint, data, options = {}) { 
+        return this.request(endpoint, { 
+            ...options,
+            method: 'PUT', 
+            body: JSON.stringify(data) 
+        }); 
+    }
+    
+    /**
+     * Make a DELETE request to the API
+     * @param {string} endpoint - API endpoint
+     * @param {Object} options - Additional request options
+     * @returns {Promise<any>} Response data
+     */
+    async delete(endpoint, options = {}) { 
+        return this.request(endpoint, { 
+            ...options,
+            method: 'DELETE' 
+        }); 
+    }
+
+    /**
+     * Authenticate user with email/username and password
+     * @param {string} email - User email or username
+     * @param {string} password - User password
+     * @returns {Promise<Object>} Authentication response with token
+     */
+    async login(email, password) {
+        if (this.debug) console.log('[api.js] Attempting user login for:', email);
+        
+        try {
+            // For OAuth2PasswordRequestForm we must use form-urlencoded format
+            const formData = new URLSearchParams();
+            formData.append('username', email);
+            formData.append('password', password);
+            
+            const response = await fetch(`${this.baseURL}/auth/login`, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // Handle 422 validation errors more gracefully
+                if (response.status === 422 && data.detail) {
+                    let errorMessage = 'Login validation failed';
+                    
+                    // Handle pydantic validation errors which come as an array
+                    if (Array.isArray(data.detail)) {
+                        errorMessage = data.detail
+                            .map(err => `${err.loc.slice(1).join('.')}: ${err.msg}`)
+                            .join('; ');
+                    } else if (typeof data.detail === 'string') {
+                        errorMessage = data.detail;
+                    }
+                    
+                    const error = new Error(errorMessage);
+                    error.status = response.status;
+                    error.data = data;
+                    throw error;
+                }
+                
+                const error = new Error(data.detail || 'Login failed');
+                error.status = response.status;
+                error.data = data;
+                throw error;
+            }
+            
+            this.setToken(data.access_token);
+            if (this.debug) console.log('[api.js] Login successful, token saved');
+            
+            return data;
+        } catch (err) {
+            if (this.debug) console.error('[api.js] Login error:', err);
+            throw err;
+        }
+    }
+
+    /**
+     * Authenticate admin with email/username and password
+     * @param {string} email - Admin email or username
+     * @param {string} password - Admin password
+     * @returns {Promise<Object>} Authentication response with token
+     */
+    async adminLogin(email, password) {
+        if (this.debug) console.log('[api.js] Attempting admin login for:', email);
+        
+        // For OAuth2PasswordRequestForm we must use form-urlencoded format
+        const formData = new URLSearchParams();
+        formData.append('username', email);
+        formData.append('password', password);
+        
+        const response = await fetch(`${this.baseURL}/admin/login`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            const error = new Error(data.detail || 'Admin login failed');
+            error.status = response.status;
+            error.data = data;
+            throw error;
+        }
+        
+        this.setToken(data.access_token);
+        if (this.debug) console.log('[api.js] Admin login successful, token saved');
+        
+        return data;
+    }
+    
+    /**
+     * Register a new user account
+     * @param {Object} userData - User registration data
+     * @returns {Promise<Object>} Registration response
+     */
+    async register(userData) {
+        if (this.debug) console.log('[api.js] Registering new user:', userData.email || userData.username);
+        
+        return await this.post('/auth/register', userData, { skipAuth: true });
+    }
+}
+
+// Create global API instance and expose it
+const api = new AffluenceAPI();
+
+/**
+ * Checks if the API server is available by testing a known endpoint
+ * @returns {Promise<boolean>} True if API is available
+ */
+api.testConnection = async function() {
+    try {
+        console.log('[api.js] Testing API connection...');
+        
+        // Try endpoints in sequence until one responds
+        const testEndpoints = [
+            '',              // Try base API path first (newly added)
+            '/auth/test',    // Test auth endpoint
+            '/health',       // Health check endpoint
+            '/ping',         // Simple ping endpoint
+            '/users?limit=1' // Try users endpoint with limit
+        ];
+        
+        // First try with a simple OPTIONS request to check CORS
+        try {
+            const optionsResponse = await fetch(this.baseURL, { 
+                method: 'OPTIONS',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (optionsResponse.ok || optionsResponse.status === 204) {
+                console.log(`[api.js] API connection successful via OPTIONS request`);
+                return true;
+            }
+        } catch (err) {
+            console.log('[api.js] OPTIONS request failed, trying other endpoints');
+        }
+        
+        // Then try other endpoints
+        for (const endpoint of testEndpoints) {
+            try {
+                const response = await fetch(`${this.baseURL}${endpoint}`);
+                console.log(`[api.js] Testing ${this.baseURL}${endpoint}: ${response.status}`);
+                if (response.ok) {
+                    console.log(`[api.js] API connection successful via ${endpoint}`);
+                    return true;
+                }
+            } catch (err) {
+                console.log(`[api.js] Endpoint ${endpoint} failed: ${err.message}`);
+                // Continue to next endpoint
+            }
+        }
+        
+        // Special case: Try the direct admin endpoint which should definitely exist
+        try {
+            const adminResponse = await fetch(`${this.baseURL}/admin/dashboard`);
+            if (adminResponse.status === 401) {
+                // 401 means API is working but needs auth, which is good enough
+                console.log('[api.js] API connection successful via /admin endpoint (401 is ok)');
+                return true;
+            }
+        } catch (err) {
+            // Continue if this fails too
+        }
+        
+        // If we're here, all endpoints failed
+        console.error('[api.js] All API test endpoints failed');
+        return false;
+    } catch (err) {
+        console.error('[api.js] API connection test failed:', err);
+        return false;
+    }
+};
+
+// Make sure it's available globally
+if (typeof window !== 'undefined') {
+    window.api = api;
+    console.log('[api.js] Global API instance created and attached to window');
+}
+
+// Small UI helpers
+function formatCurrency(amount) { try { return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount).replace('NGN', '₦'); } catch (_) { return amount; } }
+function formatDate(dateString) { try { const d = new Date(dateString); return d.toLocaleString(); } catch (_) { return dateString; } }
+
+// Toast helper
+function showToast(message, type = 'info') {
+    const t = document.createElement('div'); t.className = `toast toast-${type}`; t.textContent = message;
+    t.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 15px;color:#fff;border-radius:6px;z-index:10000;';
+    t.style.background = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+// Auth check for non-admin pages
+function checkAuth() {
+    const publicPages = ['/index.html', '/login.html', '/register.html', '/'];
+    const adminPages = ['/admin-login.html', '/admin-dashboard.html', '/admin-users.html'];
+    const current = window.location.pathname || '/';
+    if (adminPages.some(p => current.includes('admin-'))) return; // admin pages handle auth separately
+    if (!publicPages.includes(current) && !api.isAuthenticated()) window.location.href = '/login.html';
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', checkAuth); else checkAuth();

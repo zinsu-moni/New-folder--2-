@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affluence - Monetize Your Digital Presence</title>
+    <link rel="icon" type="image/png" href="https://pulsenet.top/favicon.png">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            margin: 0;
+            background: #f7f8fa;
+            color: #222;
+        }
+        header {
+            background: #4f46e5;
+            color: #fff;
+            padding: 16px 0;
+            position: relative;
+        }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+        }
+        .menu-toggle span {
+            width: 30px;
+            height: 3px;
+            background: #fff;
+            border-radius: 3px;
+            transition: 0.3s;
+        }
+        nav {
+            display: flex;
+            gap: 32px;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: opacity 0.3s;
+        }
+        nav a:hover {
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+            }
+            nav {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #4f46e5;
+                flex-direction: column;
+                gap: 0;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+            nav.active {
+                max-height: 400px;
+            }
+            nav a {
+                padding: 16px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+        }
+        .hero {
+            background: #fff;
+            padding: 48px 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .hero h1 {
+            font-size: 2.5em;
+            margin-bottom: 16px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            margin-bottom: 32px;
+        }
+        .hero a {
+            background: #4f46e5;
+            color: #fff;
+            padding: 12px 32px;
+            border-radius: 24px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.15);
+        }
+        .section {
+            max-width: 900px;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            padding: 32px;
+        }
+        .section h2 {
+            text-align: center;
+            margin-bottom: 32px;
+            color: #4f46e5;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+        .feature {
+            background: #f7f8fa;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        .feature h3 {
+            margin-top: 12px;
+            color: #4f46e5;
+        }
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .step {
+            background: #f7f8fa;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .step h5 {
+            margin: 12px 0 8px 0;
+            color: #4f46e5;
+        }
+        .testimonials {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .testimonial {
+            background: #f7f8fa;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        .testimonial img {
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 12px;
+        }
+        .cta {
+            text-align: center;
+            margin: 48px 0;
+        }
+        .cta a {
+            background: #4f46e5;
+            color: #fff;
+            padding: 14px 40px;
+            border-radius: 24px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2em;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.15);
+        }
+        footer {
+            background: #222;
+            color: #fff;
+            text-align: center;
+            padding: 24px 0;
+            margin-top: 48px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">Affluence</div>
+            <div class="menu-toggle" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav id="nav-menu">
+                <a href="#hero">Home</a>
+                <a href="#monetization">Monetization</a>
+                <a href="#how">How It Works</a>
+                <a href="#testimonials">Testimonials</a>
+                <a href="|">Sign Up</a>
+                <a href="login.html">Sign In</a>
+            </nav>
+        </div>
+    </header>
+    <section class="hero" id="hero">
+        <h1>Monetize Your Digital Presence</h1>
+        <p>Join PulseNet's platform and earn through social media and task completion. Free enrollment with referral bonuses.</p>
+        <a href="https://pulsenet.top/register.php">Join affluence</a>
+    </section>
+    <section class="section" id="monetization">
+        <h2>Monetization System</h2>
+        <div class="features">
+            <div class="feature"><h3>Loan Management</h3><p>Access and manage loans with favorable terms.</p></div>
+            <div class="feature"><h3>Task Completion</h3><p>Complete simple tasks and get paid immediately.</p></div>
+            <div class="feature"><h3>WhatsApp</h3><p>Earn by sharing content and growing your audience.</p></div>
+            <div class="feature"><h3>TikTok</h3><p>Create content and earn based on engagement.</p></div>
+            <div class="feature"><h3>Facebook</h3><p>Monetize your presence through posts.</p></div>
+            <div class="feature"><h3>Snapchat</h3><p>Earn by creating engaging stories.</p></div>
+            <div class="feature"><h3>YouTube</h3><p>Grow your channel and earn through views.</p></div>
+            <div class="feature"><h3>Twitter</h3><p>Earn by tweeting and engaging with followers.</p></div>
+            <div class="feature"><h3>Stream & Earn</h3><p>Live stream and earn from viewer interactions.</p></div>
+        </div>
+    </section>
+    <section class="section" id="how">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step"><h5>Create Account</h5><p>Sign up  in just a few minutes.</p></div>
+            <div class="step"><h5>Get Welcome Bonus</h5><p>Receive your N2,000+ welcome bonus instantly.</p></div>
+            <div class="step"><h5>Refer Friends</h5><p>Invite friends and earn  for each referral.</p></div>
+            <div class="step"><h5>Connect Social Media</h5><p>Link your accounts to start monetizing.</p></div>
+            <div class="step"><h5>Complete Tasks</h5><p>Choose tasks and get paid upon completion.</p></div>
+            <div class="step"><h5>Withdraw Earnings</h5><p>Withdraw your earnings easily to your bank.</p></div>
+        </div>
+    </section>
+    <section class="section" id="testimonials">
+        <h2>What Our Members Say</h2>
+        <div class="testimonials">
+            <div class="testimonial">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Aisha Bello">
+                <p>"Affluence transformed my social media into a real income stream. I earn for every post I create!"</p>
+                <h5>Aisha Bello</h5>
+                <span>Content Creator</span>
+            </div>
+            <div class="testimonial">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Chukwu Emeka">
+                <p>"The task completion feature is amazing. I complete simple tasks daily and earn a steady income."</p>
+                <h5>Chukwu Emeka</h5>
+                <span>Freelancer</span>
+            </div>
+            <div class="testimonial">
+                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Fatima Ibrahim">
+                <p>"I stream my gaming sessions on PulseNet and earn per stream. It's turned my hobby into a profitable venture!"</p>
+                <h5>Fatima Ibrahim</h5>
+                <span>Streamer</span>
+            </div>
+        </div>
+    </section>
+    <section class="cta">
+        <h2>Ready to Monetize Your Digital Presence?</h2>
+        <p>Join thousands of Nigerians earning with PulseNet. Free enrollment with referral bonuses.</p>
+        <a href="https://pulsenet.top/register.php">Join For Free</a>
+    </section>
+    <footer>
+        <p>Affluence &copy; All Rights Reserved</p>
+        <nav>
+            <a href="https://pulsenet.top/index.html">Home</a> |
+            <a href="https://pulsenet.top/register.php">Sign Up</a> |
+            <a href="https://pulsenet.top/login.php">Sign In</a>
+        </nav>
+    </footer>
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('nav-menu');
+            nav.classList.toggle('active');
+        }
+        // Close menu when clicking on a link
+        document.querySelectorAll('#nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('nav-menu').classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

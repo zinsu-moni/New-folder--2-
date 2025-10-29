@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon Management - Affluence Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 12px 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 30px;
+            background: #f5f7fa;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #2d3748;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters select {
+            padding: 10px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .content-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        table tr:hover {
+            background: #f7fafc;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-unused {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-used {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-revoked {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-mega {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-alpha {
+            background: #ddd6fe;
+            color: #5b21b6;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+
+        .btn-small:hover {
+            opacity: 0.8;
+        }
+
+        .btn-assign {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-revoke {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h2>🎯 Affluence Admin</h2>
+            <ul class="sidebar-menu">
+                <li><a href="admin-dashboard.html">📊 Dashboard</a></li>
+                <li><a href="admin-users.html">👥 Users</a></li>
+                <li><a href="admin-coupons.html" class="active">🎟️ Coupons</a></li>
+                <li><a href="admin-articles.html">📰 Articles</a></li>
+                <li><a href="admin-cards.html">🎴 Cards</a></li>
+                <li><a href="admin-withdrawals.html">💰 Withdrawals</a></li>
+                <li><a href="admin-announcements.html">📢 Announcements</a></li>
+                <li><a href="admin-logs.html">📝 System Logs</a></li>
+            </ul>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1>🎟️ Coupon Management</h1>
+                <button class="btn btn-primary" onclick="createCouponModal()">+ Create Coupon</button>
+            </div>
+
+            <div class="filters">
+                <select id="statusFilter" onchange="loadCoupons()">
+                    <option value="">All Status</option>
+                    <option value="unused">Unused</option>
+                    <option value="used">Used</option>
+                    <option value="revoked">Revoked</option>
+                </select>
+            </div>
+
+            <div class="content-section">
+                <div id="couponsTable">
+                    <div class="loading">Loading coupons...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // Fallback shim: ensure adminAPI exists even if js/admin.js failed to load
+        (function ensureAdminAPI() {
+            if (typeof window.adminAPI === 'undefined') {
+                try {
+                    const apiInst = window.api || new AffluenceAPI();
+                    window.adminAPI = {
+                        getUsers: async (skip = 0, limit = 100, role = null) => {
+                            let url = `/admin/users?skip=${skip}&limit=${limit}`;
+                            if (role) url += `&role=${role}`;
+                            return await apiInst.get(url);
+                        },
+                        getCoupons: async (skip = 0, limit = 100, status = null) => {
+                            let url = `/admin/coupons?skip=${skip}&limit=${limit}`;
+                            if (status) url += `&status=${status}`;
+                            return await apiInst.get(url);
+                        },
+                        createCoupon: async (data) => apiInst.post('/admin/coupons', data),
+                        updateCoupon: async (id, data) => apiInst.put(`/admin/coupons/${id}`, data),
+                        deleteCoupon: async (id) => apiInst.delete(`/admin/coupons/${id}`)
+                    };
+                    console.warn('adminAPI was missing; fallback shim initialized.');
+                } catch (e) {
+                    console.error('Failed to initialize adminAPI shim:', e);
+                }
+            }
+        })();
+
+        // Fallback UI helpers if admin.js didn't load
+        (function ensureAdminUIHelpers() {
+            if (typeof window.showModal !== 'function') {
+                window.showModal = function(title, content, onConfirm) {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;`;
+                    modal.innerHTML = `
+                        <div style="background:#fff;padding:24px;border-radius:10px;max-width:520px;width:90%">
+                            <h3 style="margin:0 0 12px 0;color:#1f2937">${title}</h3>
+                            <div style="margin-bottom:16px;color:#4b5563">${content}</div>
+                            <div style="display:flex;gap:8px;justify-content:flex-end">
+                                <button id="modal-cancel" style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer">Cancel</button>
+                                <button id="modal-confirm" style="padding:8px 14px;border:none;border-radius:8px;background:#6366f1;color:#fff;cursor:pointer">Confirm</button>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+                    modal.querySelector('#modal-cancel').onclick = () => modal.remove();
+                    modal.querySelector('#modal-confirm').onclick = async () => { try { await onConfirm(); } finally { modal.remove(); } };
+                }
+            }
+
+            if (typeof window.showFormModal !== 'function') {
+                window.showFormModal = function(title, fields, onSubmit) {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999;`;
+                    const fieldsHtml = fields.map(f => {
+                        if (f.type === 'select') {
+                            return `
+                                <div style="margin-bottom:12px">
+                                    <label style="display:block;margin-bottom:6px;font-weight:600;color:#374151">${f.label}</label>
+                                    <select id="${f.name}" ${f.required ? 'required' : ''} style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;">
+                                        ${f.options.map(o => `<option value="${o.value}" ${f.value===o.value?'selected':''}>${o.label}</option>`).join('')}
+                                    </select>
+                                </div>`
+                        }
+                        if (f.type === 'textarea') {
+                            return `
+                                <div style="margin-bottom:12px">
+                                    <label style="display:block;margin-bottom:6px;font-weight:600;color:#374151">${f.label}</label>
+                                    <textarea id="${f.name}" ${f.required ? 'required' : ''} placeholder="${f.placeholder||''}" style="width:100%;min-height:100px;padding:10px;border:1px solid #e5e7eb;border-radius:8px;">${f.value||''}</textarea>
+                                </div>`
+                        }
+                        return `
+                            <div style="margin-bottom:12px">
+                                <label style="display:block;margin-bottom:6px;font-weight:600;color:#374151">${f.label}</label>
+                                <input id="${f.name}" type="${f.type||'text'}" value="${f.value||''}" ${f.required ? 'required' : ''} placeholder="${f.placeholder||''}" step="${f.step||'any'}" style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;" />
+                            </div>`
+                    }).join('');
+
+                    modal.innerHTML = `
+                        <div style="background:#fff;padding:24px;border-radius:10px;max-width:640px;width:92%">
+                            <h3 style="margin:0 0 16px 0;color:#1f2937">${title}</h3>
+                            <form id="modalForm">${fieldsHtml}
+                                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                                    <button type="button" id="modal-cancel" style="padding:8px 14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer">Cancel</button>
+                                    <button type="submit" style="padding:8px 14px;border:none;border-radius:8px;background:#6366f1;color:#fff;cursor:pointer">Submit</button>
+                                </div>
+                            </form>
+                        </div>`;
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+                    modal.querySelector('#modal-cancel').onclick = () => modal.remove();
+                    const form = modal.querySelector('#modalForm');
+                    form.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const data = {};
+                        fields.forEach(f => {
+                            const el = document.getElementById(f.name);
+                            let v = (f.type === 'checkbox') ? el.checked : el.value;
+                            if (f.type === 'number') v = parseFloat(v);
+                            data[f.name] = v;
+                        });
+                        try {
+                            await onSubmit(data);
+                            modal.remove();
+                        } catch (err) {
+                            (typeof showToast === 'function') ? showToast('Error: ' + (err.message||err), 'error') : alert('Error: ' + (err.message||err));
+                        }
+                    }
+                }
+            }
+        })();
+
+        let allUsers = [];
+
+        async function loadUsers() {
+            try {
+                allUsers = await adminAPI.getUsers(0, 1000);
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadCoupons() {
+            try {
+                const statusFilter = document.getElementById('statusFilter').value;
+                const coupons = await adminAPI.getCoupons(0, 100, statusFilter || null);
+
+                if (coupons.length === 0) {
+                    document.getElementById('couponsTable').innerHTML = '<p style="text-align: center; color: #718096;">No coupons found</p>';
+                    return;
+                }
+
+                const tableHtml = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Type</th>
+                                <th>Bonus Amount</th>
+                                <th>Assigned To</th>
+                                <th>Status</th>
+                                <th>Used By</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${coupons.map(coupon => {
+                                const assignedUser = allUsers.find(u => u.user_id === coupon.assigned_to);
+                                const usedUser = allUsers.find(u => u.user_id === coupon.used_by);
+                                const typeLabel = coupon.coupon_type === 'mega' ? 'MEGA' : coupon.coupon_type === 'alpha' ? 'ALPHA' : (coupon.coupon_type || 'MEGA').toUpperCase();
+                                const typeBadgeClass = coupon.coupon_type === 'alpha' ? 'badge-alpha' : 'badge-mega';
+                                
+                                return `
+                                <tr>
+                                    <td><strong>${coupon.code}</strong></td>
+                                    <td><span class="badge ${typeBadgeClass}">${typeLabel}</span></td>
+                                    <td>${typeof formatCurrency === 'function' ? formatCurrency(coupon.bonus_amount) : '₦' + Number(coupon.bonus_amount).toLocaleString()}</td>
+                                    <td>${assignedUser ? assignedUser.username : (coupon.assigned_to ?? 'Unassigned')}</td>
+                                    <td><span class="badge badge-${coupon.status.toLowerCase()}">${coupon.status.toUpperCase()}</span></td>
+                                    <td>${usedUser ? usedUser.username : '-'}</td>
+                                    <td>${typeof formatDate === 'function' ? formatDate(coupon.created_at) : new Date(coupon.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <div class="action-btns">
+                                            ${coupon.status.toLowerCase() === 'unused' ? `
+                                                <button class="btn-small btn-assign" onclick="assignCoupon(${coupon.id}, '${coupon.code}')">
+                                                    Assign
+                                                </button>
+                                                <button class="btn-small btn-revoke" onclick="revokeCoupon(${coupon.id}, '${coupon.code}')">
+                                                    Revoke
+                                                </button>
+                                            ` : ''}
+                                            <button class="btn-small btn-delete" onclick="deleteCouponConfirm(${coupon.id}, '${coupon.code}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                document.getElementById('couponsTable').innerHTML = tableHtml;
+            } catch (error) {
+                console.error('Error loading coupons:', error);
+                const msg = (error && error.message) ? error.message : 'Failed to load coupons';
+                document.getElementById('couponsTable').innerHTML = `<p style="color: red;">Failed to load coupons: ${msg}</p>`;
+            }
+        }
+
+        function createCouponModal() {
+            const vendorOptions = allUsers
+                .filter(u => u.role === 'subadmin')
+                .map(u => ({ value: u.user_id, label: `${u.username} (${u.full_name})` }));
+
+            vendorOptions.unshift({ value: '', label: 'Unassigned' });
+
+            showFormModal('Create New Coupon', [
+                {
+                    name: 'code',
+                    label: 'Coupon Code',
+                    type: 'text',
+                    required: true,
+                    placeholder: 'e.g., WELCOME2024'
+                },
+                {
+                    name: 'coupon_type',
+                    label: 'Coupon Type',
+                    type: 'select',
+                    required: true,
+                    options: [
+                        { value: 'mega', label: 'MEGA (₦500 bonus)' },
+                        { value: 'alpha', label: 'ALPHA (₦2,000 bonus)' }
+                    ]
+                },
+                {
+                    name: 'assigned_to',
+                    label: 'Assign to Sub-admin (Optional)',
+                    type: 'select',
+                    required: false,
+                    options: vendorOptions
+                }
+            ], async (data) => {
+                try {
+                    // Convert empty string to null
+                    if (!data.assigned_to) {
+                        data.assigned_to = null;
+                    }
+                    
+                    await adminAPI.createCoupon(data);
+                    showToast('Coupon created successfully!', 'success');
+                    loadCoupons();
+                } catch (error) {
+                    showToast('Failed to create coupon: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function assignCoupon(couponId, code) {
+            const vendorOptions = allUsers
+                .filter(u => u.role === 'subadmin')
+                .map(u => ({ value: u.user_id, label: `${u.username} (${u.full_name})` }));
+
+            showFormModal(`Assign Coupon: ${code}`, [
+                {
+                    name: 'assigned_to',
+                    label: 'Assign to Sub-admin',
+                    type: 'select',
+                    required: true,
+                    options: vendorOptions
+                }
+            ], async (data) => {
+                try {
+                    await adminAPI.updateCoupon(couponId, { assigned_to: parseInt(data.assigned_to) });
+                    showToast('Coupon assigned successfully!', 'success');
+                    loadCoupons();
+                } catch (error) {
+                    showToast('Failed to assign coupon: ' + error.message, 'error');
+                }
+            });
+        }
+
+        async function revokeCoupon(couponId, code) {
+            showModal(
+                'Revoke Coupon',
+                `Are you sure you want to revoke coupon <strong>${code}</strong>?`,
+                async () => {
+                    try {
+                        await adminAPI.updateCoupon(couponId, { status: 'revoked' });
+                        showToast('Coupon revoked successfully!', 'success');
+                        loadCoupons();
+                    } catch (error) {
+                        showToast('Failed to revoke coupon: ' + error.message, 'error');
+                    }
+                }
+            );
+        }
+
+        function deleteCouponConfirm(couponId, code) {
+            showModal(
+                'Delete Coupon',
+                `Are you sure you want to delete coupon <strong>${code}</strong>? This action cannot be undone.`,
+                async () => {
+                    try {
+                        await adminAPI.deleteCoupon(couponId);
+                        showToast('Coupon deleted successfully!', 'success');
+                        loadCoupons();
+                    } catch (error) {
+                        showToast('Failed to delete coupon: ' + error.message, 'error');
+                    }
+                }
+            );
+        }
+
+        function logout() {
+            localStorage.removeItem('affluence_token');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Load data on page load
+        async function init() {
+            await loadUsers();
+            await loadCoupons();
+        }
+
+        init();
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + \'/dashboard\', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

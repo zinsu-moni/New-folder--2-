@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Coupon Code - Affluence</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #f7f8fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #222222;
+            --text-secondary: #666666;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --border-color: #e5e7eb;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --card-bg: #ffffff;
+            --card-border: #e5e7eb;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --accent-color: #3b82f6;
+            --accent-hover: #60a5fa;
+            --border-color: #404040;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --card-bg: #2d2d2d;
+            --card-border: #404040;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px var(--shadow);
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: var(--accent-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-hover);
+            transform: translateX(-5px);
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .info-banner h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .info-banner p {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .subadmins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .subadmin-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 12px var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .subadmin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+        }
+
+        .subadmin-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .subadmin-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .subadmin-info h3 {
+            color: var(--text-primary);
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .subadmin-username {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .contact-info {
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .contact-item i {
+            width: 20px;
+            color: var(--accent-color);
+        }
+
+        /* WhatsApp link styling */
+        .contact-item i.fa-whatsapp {
+            color: #25D366;
+        }
+        .whatsapp-link {
+            color: #25D366;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .whatsapp-link:hover {
+            text-decoration: underline;
+        }
+
+        .bank-details {
+            background: rgba(37, 99, 235, 0.05);
+            border: 1px solid var(--accent-color);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .bank-details h4 {
+            color: var(--accent-color);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .bank-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .bank-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .bank-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .no-bank {
+            color: var(--text-secondary);
+            font-style: italic;
+            text-align: center;
+            padding: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .loading i {
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        [data-theme="dark"] .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .subadmins-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .info-banner {
+                padding: 20px;
+            }
+
+            .subadmin-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">🌙 Dark Mode</span>
+    </button>
+
+    <div class="container">
+        <a href="register.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Back to Sign Up
+        </a>
+
+        <div class="header">
+            <h1>🎟️ Get Your Coupon Code</h1>
+            <p>Contact any of our verified vendors below to get a coupon code and start earning!</p>
+        </div>
+
+        <div class="info-banner">
+            <h2><i class="fas fa-info-circle"></i> How to Get Started</h2>
+            <p>
+                1. Choose a vendor from the list below<br>
+                2. Contact them via phone or username to request a coupon code<br>
+                3. You can make payment to their bank account if required<br>
+                4. Return to the sign-up page and enter your coupon code
+            </p>
+        </div>
+
+        <div id="subadminsContainer">
+            <div class="loading">
+                <div><i class="fas fa-spinner fa-spin"></i></div>
+                Loading vendors...
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 Affluence. All Rights Reserved.</p>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const themeIcon = document.getElementById('theme-icon');
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            if (newTheme === 'dark') {
+                themeIcon.textContent = '☀️ Light Mode';
+            } else {
+                themeIcon.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            
+            html.setAttribute('data-theme', savedTheme);
+            
+            if (savedTheme === 'dark') {
+                themeIcon.textContent = '☀️ Light Mode';
+            } else {
+                themeIcon.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        // Build WhatsApp link from a phone number. Attempts light normalization.
+        function buildWhatsAppLink(phone) {
+            if (!phone) return null;
+            // Keep digits only
+            let digits = String(phone).replace(/[^0-9]/g, '');
+            if (!digits) return null;
+            // If number starts with 0 and looks Nigerian length, prepend country code 234
+            // (This is a best-effort; real normalization should be done server-side or with libphonenumber.)
+            if (digits.startsWith('0') && digits.length >= 10 && digits.length <= 11) {
+                digits = '234' + digits.slice(1);
+            }
+            return `https://wa.me/${digits}`;
+        }
+
+        // Load subadmins
+        async function loadSubadmins() {
+            const container = document.getElementById('subadminsContainer');
+            // Determine API base URL candidates (supports same-origin dev servers and FastAPI defaults)
+            const isFileOrigin = window.location.protocol === 'file:' || !window.location.origin || window.location.origin === 'null';
+            const candidates = isFileOrigin
+                ? ['http://localhost:8000', 'http://127.0.0.1:8000']
+                : [window.location.origin, 'http://localhost:8000', 'http://127.0.0.1:8000'];
+
+            let lastError = null;
+            let usedBase = null;
+            let subadmins = null;
+
+            for (const base of candidates) {
+                try {
+                    const resp = await fetch(`${base}/api/auth/subadmins`);
+                    if (!resp.ok) {
+                        let details = '';
+                        try { details = await resp.text(); } catch (_) {}
+                        throw new Error(`HTTP ${resp.status} ${resp.statusText} ${details}`);
+                    }
+                    subadmins = await resp.json();
+                    usedBase = base;
+                    break; // success
+                } catch (err) {
+                    console.warn(`Vendor load attempt failed for ${base}:`, err);
+                    lastError = err;
+                }
+            }
+
+            try {
+                if (!subadmins) {
+                    throw lastError || new Error('No response from any API base');
+                }
+                
+                if (subadmins.length === 0) {
+                    container.innerHTML = '<div class="error-message">No vendors available at the moment. Please check back later.</div>';
+                    return;
+                }
+
+                const html = `
+                    <div class="subadmins-grid">
+                        ${subadmins.map(subadmin => {
+                            const initials = subadmin.full_name
+                                ? subadmin.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                                : subadmin.username.substring(0, 2).toUpperCase();
+                            
+                            return `
+                                <div class="subadmin-card">
+                                    <div class="subadmin-header">
+                                        <div class="subadmin-avatar">${initials}</div>
+                                        <div class="subadmin-info">
+                                            <h3>${subadmin.full_name || 'Vendor'}</h3>
+                                            <div class="subadmin-username">@${subadmin.username}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="contact-info">
+                                        <div class="contact-item">
+                                            <i class="fas fa-user"></i>
+                                            <span>${subadmin.username}</span>
+                                        </div>
+                                        ${subadmin.phone ? `
+                                            <div class=\"contact-item\">
+                                                <i class=\"fab fa-whatsapp\"></i>
+                                                <a class=\"whatsapp-link\" href=\"${buildWhatsAppLink(subadmin.phone) || '#'}\" target=\"_blank\" rel=\"noopener\">${subadmin.phone}</a>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    ${subadmin.bank_details ? `
+                                        <div class="bank-details">
+                                            <h4><i class="fas fa-university"></i> Bank Details</h4>
+                                            <div class="bank-item">
+                                                <span class="bank-label">Bank:</span>
+                                                <span class="bank-value">${subadmin.bank_details.bank_name}</span>
+                                            </div>
+                                        </div>
+                                    ` : `
+                                        <div class="bank-details">
+                                            <div class="no-bank">Bank details not available</div>
+                                        </div>
+                                    `}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading subadmins:', error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i><br>
+                        Failed to load vendors. Please try again later.<br/>
+                        <small style="display:block;margin-top:8px;opacity:0.8;">Tip: Ensure the server is running at ${isFileOrigin ? 'http://localhost:8000' : (usedBase || 'http://localhost:8000')}.</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        loadTheme();
+        loadSubadmins();
+    </script>
+</body>
+</html>

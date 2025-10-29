@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Integration Test - Affluence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #374151;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .test-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .test-item h3 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.online {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status.offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #374151;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 API Integration Test</h1>
+        <p style="color: #6b7280; margin-bottom: 20px;">Test the connection between your frontend and backend</p>
+
+        <!-- Server Status -->
+        <h2>1. Server Status</h2>
+        <div class="test-item">
+            <h3>Backend Health Check <span id="serverStatus" class="status offline">Checking...</span></h3>
+            <button onclick="checkServerHealth()">Check Server</button>
+            <div id="healthResult"></div>
+        </div>
+
+        <!-- Authentication Tests -->
+        <h2>2. Authentication</h2>
+        <div class="test-item">
+            <h3>Register New User</h3>
+            <div class="input-group">
+                <label>Username:</label>
+                <input type="text" id="regUsername" placeholder="Enter username" value="testuser">
+            </div>
+            <div class="input-group">
+                <label>Email:</label>
+                <input type="email" id="regEmail" placeholder="Enter email" value="test@affluence.com">
+            </div>
+            <div class="input-group">
+                <label>Full Name:</label>
+                <input type="text" id="regFullName" placeholder="Enter full name" value="Test User">
+            </div>
+            <div class="input-group">
+                <label>Password:</label>
+                <input type="password" id="regPassword" placeholder="Enter password" value="password123">
+            </div>
+            <button onclick="testRegister()">Register</button>
+            <div id="registerResult"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Login User</h3>
+            <div class="input-group">
+                <label>Username:</label>
+                <input type="text" id="loginUsername" placeholder="Enter username" value="testuser">
+            </div>
+            <div class="input-group">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" value="password123">
+            </div>
+            <button onclick="testLogin()">Login</button>
+            <button onclick="testLogout()">Logout</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <!-- Protected Endpoints -->
+        <h2>3. Protected Endpoints (Requires Login)</h2>
+        <div class="test-item">
+            <h3>Get Dashboard Stats</h3>
+            <button onclick="testDashboard()">Get Dashboard</button>
+            <div id="dashboardResult"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Get User Profile</h3>
+            <button onclick="testProfile()">Get Profile</button>
+            <div id="profileResult"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Get Tasks</h3>
+            <button onclick="testTasks()">Get Tasks</button>
+            <div id="tasksResult"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>Get Top Earners</h3>
+            <button onclick="testTopEarners()">Get Leaderboard</button>
+            <div id="earnersResult"></div>
+        </div>
+
+        <!-- Current Status -->
+        <h2>4. Current Status</h2>
+        <div class="test-item">
+            <h3>Token Info</h3>
+            <p><strong>Authenticated:</strong> <span id="authStatus">Checking...</span></p>
+            <p><strong>Token:</strong> <span id="tokenDisplay" style="word-break: break-all; font-size: 11px;">None</span></p>
+            <button onclick="updateStatus()">Refresh Status</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Check server health
+        async function checkServerHealth() {
+            const resultEl = document.getElementById('healthResult');
+            const statusEl = document.getElementById('serverStatus');
+            resultEl.innerHTML = '<div class="result info">Checking server...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                
+                resultEl.innerHTML = `<div class="result success">✅ Server is online!\n${JSON.stringify(data, null, 2)}</div>`;
+                statusEl.textContent = 'Online';
+                statusEl.className = 'status online';
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Server is offline!\n${error.message}</div>`;
+                statusEl.textContent = 'Offline';
+                statusEl.className = 'status offline';
+            }
+        }
+
+        // Test register
+        async function testRegister() {
+            const resultEl = document.getElementById('registerResult');
+            resultEl.innerHTML = '<div class="result info">Registering...</div>';
+            
+            try {
+                const data = await api.register({
+                    username: document.getElementById('regUsername').value,
+                    email: document.getElementById('regEmail').value,
+                    full_name: document.getElementById('regFullName').value,
+                    password: document.getElementById('regPassword').value
+                });
+                
+                resultEl.innerHTML = `<div class="result success">✅ Registration successful!\n${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Registration failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Test login
+        async function testLogin() {
+            const resultEl = document.getElementById('loginResult');
+            resultEl.innerHTML = '<div class="result info">Logging in...</div>';
+            
+            try {
+                const data = await api.login(
+                    document.getElementById('loginUsername').value,
+                    document.getElementById('loginPassword').value
+                );
+                
+                resultEl.innerHTML = `<div class="result success">✅ Login successful!\nToken: ${data.access_token.substring(0, 50)}...</div>`;
+                updateStatus();
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Login failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Test logout
+        function testLogout() {
+            api.removeToken();
+            document.getElementById('loginResult').innerHTML = '<div class="result info">Logged out successfully!</div>';
+            updateStatus();
+        }
+
+        // Test dashboard
+        async function testDashboard() {
+            const resultEl = document.getElementById('dashboardResult');
+            resultEl.innerHTML = '<div class="result info">Loading dashboard...</div>';
+            
+            try {
+                const data = await api.getDashboardStats();
+                resultEl.innerHTML = `<div class="result success">✅ Dashboard loaded!\n${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Dashboard failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Test profile
+        async function testProfile() {
+            const resultEl = document.getElementById('profileResult');
+            resultEl.innerHTML = '<div class="result info">Loading profile...</div>';
+            
+            try {
+                const data = await api.getProfile();
+                resultEl.innerHTML = `<div class="result success">✅ Profile loaded!\n${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Profile failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Test tasks
+        async function testTasks() {
+            const resultEl = document.getElementById('tasksResult');
+            resultEl.innerHTML = '<div class="result info">Loading tasks...</div>';
+            
+            try {
+                const data = await api.getTasks();
+                resultEl.innerHTML = `<div class="result success">✅ Tasks loaded!\nTotal: ${data.length}\n${JSON.stringify(data.slice(0, 2), null, 2)}</div>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Tasks failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Test top earners
+        async function testTopEarners() {
+            const resultEl = document.getElementById('earnersResult');
+            resultEl.innerHTML = '<div class="result info">Loading leaderboard...</div>';
+            
+            try {
+                const data = await api.getTopEarners(5);
+                resultEl.innerHTML = `<div class="result success">✅ Leaderboard loaded!\nTotal: ${data.length}\n${JSON.stringify(data, null, 2)}</div>`;
+            } catch (error) {
+                resultEl.innerHTML = `<div class="result error">❌ Leaderboard failed!\n${error.message}</div>`;
+            }
+        }
+
+        // Update status
+        function updateStatus() {
+            const authStatus = api.isAuthenticated();
+            const token = api.getToken();
+            
+            document.getElementById('authStatus').textContent = authStatus ? '✅ Yes' : '❌ No';
+            document.getElementById('authStatus').style.color = authStatus ? '#10b981' : '#ef4444';
+            document.getElementById('tokenDisplay').textContent = token ? token.substring(0, 100) + '...' : 'None';
+        }
+
+        // Run on load
+        window.addEventListener('load', () => {
+            checkServerHealth();
+            updateStatus();
+        });
+    </script>
+</body>
+</html>

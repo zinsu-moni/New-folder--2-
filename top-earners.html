@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Earners - Affluence</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #ffffff;
+            --accent-color: #1e40af;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e3a8a;
+            --blue-gradient: linear-gradient(135deg, var(--primary-color), var(--dark-blue));
+            --white-gradient: linear-gradient(135deg, var(--secondary-color), #eff6ff);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(37, 99, 235, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #1e293b;
+            --card-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #3b82f6;
+            --secondary-color: #1e293b;
+            --accent-color: #60a5fa;
+            --light-blue: #60a5fa;
+            --dark-blue: #1e40af;
+            --blue-gradient: linear-gradient(135deg, var(--primary-color), var(--dark-blue));
+            --white-gradient: linear-gradient(135deg, #1e293b, #0f172a);
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --card-border: rgba(59, 130, 246, 0.3);
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(59, 130, 246, 0.2);
+            --text-color: #f1f5f9;
+            --card-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: var(--white-gradient);
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px;
+            overflow-y: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-toggle {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            transform: rotate(90deg);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-heading {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 20px 0 10px 15px;
+            text-transform: uppercase;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .menu-text {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .menu-text,
+        .sidebar.collapsed .menu-heading {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 0;
+            transition: margin-left 0.3s;
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .hamburger {
+            width: 20px;
+            height: 14px;
+            position: relative;
+            margin: auto;
+            transform: rotate(0deg);
+            transition: 0.5s ease-in-out;
+        }
+
+        .hamburger span {
+            display: block;
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: white;
+            border-radius: 2px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: 0.25s ease-in-out;
+        }
+
+        .hamburger span:nth-child(1) {
+            top: 0px;
+        }
+
+        .hamburger span:nth-child(2) {
+            top: 6px;
+        }
+
+        .hamburger span:nth-child(3) {
+            top: 12px;
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(1) {
+            top: 6px;
+            transform: rotate(135deg);
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(2) {
+            opacity: 0;
+            left: -20px;
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(3) {
+            top: 6px;
+            transform: rotate(-135deg);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: var(--blue-gradient);
+            padding: 30px;
+            color: white;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .breadcrumb a:hover {
+            color: white;
+        }
+
+        .breadcrumb-separator {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .breadcrumb-active {
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Container */
+        .container {
+            padding: 30px;
+            padding-bottom: 100px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header i {
+            color: var(--primary-color);
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: rgba(37, 99, 235, 0.05);
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 2px solid var(--card-border);
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+            color: var(--text-color);
+        }
+
+        tr:hover {
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Rank Badge */
+        .rank-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #C0C0C0, #A9A9A9);
+            box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #CD7F32, #8B4513);
+            box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+        }
+
+        .rank-default {
+            background: var(--blue-gradient);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        /* User Name */
+        .user-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* Earnings */
+        .earnings {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+
+        /* Referrals */
+        .referrals {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item:hover {
+            color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .theme-toggle-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .rank-badge {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <span>Affluence</span>
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="dashboard.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-home"></i></div>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="menu-heading">MENU</li>
+
+            <li class="menu-item">
+                <a href="top-earners.html" class="menu-link active">
+                    <div class="menu-icon"><i class="fas fa-trophy"></i></div>
+                    <span class="menu-text">Top Earners</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="tasks.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-tasks"></i></div>
+                    <span class="menu-text">Tasks</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="loans.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-wallet"></i></div>
+                    <span class="menu-text">User Loans</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="profile.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-cog"></i></div>
+                    <span class="menu-text">Profile Settings</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="withdraw.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <span class="menu-text">Withdrawal</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="index.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-sign-out-alt"></i></div>
+                    <span class="menu-text">Log Out</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileSidebar()">
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+                <div class="logo" style="margin: 0;">Affluence</div>
+            </div>
+
+            <div class="header-right">
+                <button class="theme-toggle-btn" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙 Dark</span>
+                </button>
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1 class="page-title">Top Earners</h1>
+            <div class="breadcrumb">
+                <a href="dashboard.html">Home</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-active">Top Earners</span>
+            </div>
+        </div>
+
+        <!-- Container -->
+        <div class="container">
+            <!-- Top Earners Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-crown"></i> Top 20 Earners on Affluence</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Affiliate Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody">
+                            <!-- Dynamic content will be loaded here -->
+                            <tr>
+                                <td colspan="3" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 48px; color: var(--primary-color);"></i>
+                                    <p style="margin-top: 15px;">Loading leaderboard...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                © 2025 Affluence. All Rights Reserved.
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="withdraw.html" class="nav-item">
+            <i class="fas fa-arrow-down"></i>
+            <span>Withdraw</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const themeIcon = document.getElementById('themeIcon');
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeIcon.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const themeIcon = document.getElementById('themeIcon');
+            
+            document.body.setAttribute('data-theme', savedTheme);
+            themeIcon.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Mobile Sidebar Toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileToggle');
+            
+            sidebar.classList.toggle('mobile-open');
+            mobileToggle.classList.toggle('active');
+        }
+
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !mobileToggle.contains(e.target) &&
+                sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                mobileToggle.classList.remove('active');
+            }
+        });
+
+        // Close mobile sidebar when clicking menu items
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.getElementById('sidebar');
+                    const mobileToggle = document.getElementById('mobileToggle');
+                    sidebar.classList.remove('mobile-open');
+                    mobileToggle.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize
+        loadTheme();
+    </script>
+
+    <!-- API Scripts -->
+    <script src="js/api.js"></script>
+    <script>
+        // Create API instance
+        const api = new AffluenceAPI();
+        
+        // Check authentication
+        if (!api.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+    </script>
+    <script src="js/top-earners.js"></script>
+</body>
+</html>

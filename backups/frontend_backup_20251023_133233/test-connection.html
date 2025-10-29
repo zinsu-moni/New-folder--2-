@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Test - Affluence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .status.loading {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .status.success {
+            background: #00b894;
+            color: white;
+        }
+
+        .status.error {
+            background: #d63031;
+            color: white;
+        }
+
+        .details {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info strong {
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Backend-Frontend Connection Test</h1>
+
+        <div class="info">
+            <strong>ℹ️ Instructions:</strong><br>
+            1. Make sure the backend server is running on http://localhost:8000<br>
+            2. Click "Run Tests" below to check the connection<br>
+            3. All tests should show ✅ success status
+        </div>
+
+        <div class="test-section">
+            <h2>1. Backend Server Status</h2>
+            <div class="status loading" id="backend-status">⏳ Not tested yet</div>
+            <div class="details" id="backend-details" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. API Root Endpoint</h2>
+            <div class="status loading" id="api-status">⏳ Not tested yet</div>
+            <div class="details" id="api-details" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Health Check Endpoint</h2>
+            <div class="status loading" id="health-status">⏳ Not tested yet</div>
+            <div class="details" id="health-details" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. CORS Configuration</h2>
+            <div class="status loading" id="cors-status">⏳ Not tested yet</div>
+            <div class="details" id="cors-details" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Frontend API Configuration</h2>
+            <div class="status loading" id="config-status">⏳ Not tested yet</div>
+            <div class="details" id="config-details" style="display: none;"></div>
+        </div>
+
+        <button onclick="runTests()">🚀 Run Tests</button>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function runTests() {
+            console.log('Starting connection tests...');
+            
+            // Test 1: Backend Server
+            await testBackendServer();
+            
+            // Test 2: API Root
+            await testAPIRoot();
+            
+            // Test 3: Health Check
+            await testHealthCheck();
+            
+            // Test 4: CORS
+            await testCORS();
+            
+            // Test 5: Frontend Config
+            testFrontendConfig();
+        }
+
+        async function testBackendServer() {
+            const statusEl = document.getElementById('backend-status');
+            const detailsEl = document.getElementById('backend-details');
+            
+            statusEl.textContent = '⏳ Testing...';
+            statusEl.className = 'status loading';
+            
+            try {
+                const response = await fetch('http://localhost:8000/');
+                if (response.ok) {
+                    statusEl.textContent = '✅ Backend server is running';
+                    statusEl.className = 'status success';
+                    detailsEl.textContent = `Status: ${response.status} ${response.statusText}\nURL: ${response.url}`;
+                    detailsEl.style.display = 'block';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Backend server is not reachable';
+                statusEl.className = 'status error';
+                detailsEl.textContent = `Error: ${error.message}\n\nMake sure to start the backend server:\ncd backend\nrun.bat`;
+                detailsEl.style.display = 'block';
+            }
+        }
+
+        async function testAPIRoot() {
+            const statusEl = document.getElementById('api-status');
+            const detailsEl = document.getElementById('api-details');
+            
+            statusEl.textContent = '⏳ Testing...';
+            statusEl.className = 'status loading';
+            
+            try {
+                const response = await fetch('http://localhost:8000/');
+                const data = await response.json();
+                
+                if (response.ok && data.message) {
+                    statusEl.textContent = '✅ API root endpoint working';
+                    statusEl.className = 'status success';
+                    detailsEl.textContent = JSON.stringify(data, null, 2);
+                    detailsEl.style.display = 'block';
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ API root endpoint failed';
+                statusEl.className = 'status error';
+                detailsEl.textContent = `Error: ${error.message}`;
+                detailsEl.style.display = 'block';
+            }
+        }
+
+        async function testHealthCheck() {
+            const statusEl = document.getElementById('health-status');
+            const detailsEl = document.getElementById('health-details');
+            
+            statusEl.textContent = '⏳ Testing...';
+            statusEl.className = 'status loading';
+            
+            try {
+                const response = await fetch('http://localhost:8000/health');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'healthy') {
+                    statusEl.textContent = '✅ Health check passed';
+                    statusEl.className = 'status success';
+                    detailsEl.textContent = JSON.stringify(data, null, 2);
+                    detailsEl.style.display = 'block';
+                } else {
+                    throw new Error('Health check failed');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Health check failed';
+                statusEl.className = 'status error';
+                detailsEl.textContent = `Error: ${error.message}`;
+                detailsEl.style.display = 'block';
+            }
+        }
+
+        async function testCORS() {
+            const statusEl = document.getElementById('cors-status');
+            const detailsEl = document.getElementById('cors-details');
+            
+            statusEl.textContent = '⏳ Testing...';
+            statusEl.className = 'status loading';
+            
+            try {
+                const response = await fetch('http://localhost:8000/health', {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'GET'
+                    }
+                });
+                
+                const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                
+                if (corsHeader) {
+                    statusEl.textContent = '✅ CORS is configured correctly';
+                    statusEl.className = 'status success';
+                    detailsEl.textContent = `CORS Headers:\nAccess-Control-Allow-Origin: ${corsHeader}\nAccess-Control-Allow-Methods: ${response.headers.get('Access-Control-Allow-Methods')}\nAccess-Control-Allow-Headers: ${response.headers.get('Access-Control-Allow-Headers')}`;
+                    detailsEl.style.display = 'block';
+                } else {
+                    throw new Error('CORS headers not found');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ CORS configuration issue';
+                statusEl.className = 'status error';
+                detailsEl.textContent = `Error: ${error.message}\n\nCORS might not be configured properly in the backend.`;
+                detailsEl.style.display = 'block';
+            }
+        }
+
+        function testFrontendConfig() {
+            const statusEl = document.getElementById('config-status');
+            const detailsEl = document.getElementById('config-details');
+            
+            statusEl.textContent = '⏳ Checking...';
+            statusEl.className = 'status loading';
+            
+            try {
+                if (typeof API_CONFIG !== 'undefined') {
+                    statusEl.textContent = '✅ Frontend API configuration found';
+                    statusEl.className = 'status success';
+                    detailsEl.textContent = `API Configuration:\nBASE_URL: ${API_CONFIG.BASE_URL}\nTIMEOUT: ${API_CONFIG.TIMEOUT}ms\n\nExpected backend: http://localhost:8000/api`;
+                    detailsEl.style.display = 'block';
+                } else {
+                    throw new Error('API_CONFIG not found');
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Frontend configuration error';
+                statusEl.className = 'status error';
+                detailsEl.textContent = `Error: ${error.message}\n\nMake sure js/api.js is loaded properly.`;
+                detailsEl.style.display = 'block';
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>

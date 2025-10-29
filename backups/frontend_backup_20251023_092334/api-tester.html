@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoint Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .api-test {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .header button {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Endpoint Tester</h1>
+    <p>Use this tool to test API endpoints and debug connection issues with the backend.</p>
+    
+    <div class="api-test">
+        <div class="header">
+            <h2>API Configuration</h2>
+            <div>
+                <button onclick="updateApiBase()">Update API Base</button>
+                <button onclick="resetApiBase()">Reset</button>
+            </div>
+        </div>
+        <div id="api-config">Loading...</div>
+    </div>
+    
+    <div class="api-test">
+        <h2>Test Endpoint</h2>
+        <input type="text" id="endpoint-input" placeholder="Endpoint (e.g. /admin/users)" value="/admin/users">
+        <div class="header">
+            <div>
+                <button onclick="testEndpoint('GET')">GET</button>
+                <button onclick="testEndpoint('POST')">POST</button>
+                <button onclick="testEndpoint('PUT')">PUT</button>
+                <button onclick="testEndpoint('DELETE')">DELETE</button>
+            </div>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+        <div id="endpoint-result" class="result">Results will appear here...</div>
+    </div>
+    
+    <div class="api-test">
+        <h2>Common Admin Endpoints</h2>
+        <button onclick="testCommonEndpoint('/admin/dashboard')">Admin Dashboard</button>
+        <button onclick="testCommonEndpoint('/admin/users')">Admin Users</button>
+        <button onclick="testCommonEndpoint('/admin/withdrawals')">Admin Withdrawals</button>
+        <button onclick="testCommonEndpoint('/admin/coupons')">Admin Coupons</button>
+        <button onclick="testCommonEndpoint('/users/me')">Current User</button>
+        <div style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px;">
+            <strong>Note:</strong> The backend router prefix is '/api/admin' but the api.js already includes '/api' in the base URL.
+            <br>
+            This means that when you call api.get('/admin/users'), it actually goes to '/api/admin/users'
+            <br>
+            <span id="detected-base"></span>
+        </div>
+        
+        <script>
+            // Display the detected API base
+            document.getElementById('detected-base').textContent = 
+                'Current detected API base: ' + (typeof detectApiBase === 'function' ? detectApiBase() : 'detectApiBase not available');
+        </script>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        // Create API instance
+        const api = new AffluenceAPI();
+        const resultsEl = document.getElementById('endpoint-result');
+        
+        // Display API configuration
+        function showApiConfig() {
+            const configEl = document.getElementById('api-config');
+            configEl.innerHTML = `
+                <p><strong>Base URL:</strong> ${api.baseURL}</p>
+                <p><strong>Token Exists:</strong> ${!!api.getToken()}</p>
+                <p><strong>Current Page:</strong> ${window.location.pathname}</p>
+            `;
+        }
+        
+        // Update API base URL
+        function updateApiBase() {
+            const newBase = prompt('Enter new API base URL:', api.baseURL);
+            if (newBase) {
+                localStorage.setItem('affluence_api_base', newBase);
+                api.baseURL = newBase;
+                showApiConfig();
+            }
+        }
+        
+        // Reset API base URL
+        function resetApiBase() {
+            localStorage.removeItem('affluence_api_base');
+            api.baseURL = detectApiBase();
+            showApiConfig();
+        }
+        
+        // Clear test results
+        function clearResults() {
+            resultsEl.textContent = 'Results will appear here...';
+            resultsEl.className = 'result';
+        }
+        
+        // Test an endpoint
+        async function testEndpoint(method) {
+            resultsEl.textContent = 'Testing...';
+            resultsEl.className = 'result';
+            
+            const endpoint = document.getElementById('endpoint-input').value;
+            
+            try {
+                let response, data;
+                
+                switch(method) {
+                    case 'GET':
+                        data = await api.get(endpoint);
+                        break;
+                    case 'POST':
+                        const postData = prompt('Enter POST data as JSON:');
+                        data = await api.post(endpoint, postData ? JSON.parse(postData) : {});
+                        break;
+                    case 'PUT':
+                        const putData = prompt('Enter PUT data as JSON:');
+                        data = await api.put(endpoint, putData ? JSON.parse(putData) : {});
+                        break;
+                    case 'DELETE':
+                        data = await api.delete(endpoint);
+                        break;
+                }
+                
+                resultsEl.textContent = JSON.stringify(data, null, 2);
+                resultsEl.className = 'result success';
+            } catch (error) {
+                resultsEl.textContent = `Error: ${error.message}`;
+                resultsEl.className = 'result error';
+            }
+        }
+        
+        // Test common endpoint
+        function testCommonEndpoint(endpoint) {
+            document.getElementById('endpoint-input').value = endpoint;
+            testEndpoint('GET');
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            showApiConfig();
+        });
+    </script>
+</body>
+</html>

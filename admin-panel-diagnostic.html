@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Diagnostic Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --error-color: #f44336;
+            --success-color: #4CAF50;
+            --warning-color: #ff9800;
+            --info-color: #2196F3;
+            --dark-color: #333;
+            --light-color: #f5f5f5;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #388e3c;
+        }
+
+        .btn-secondary {
+            background-color: #757575;
+        }
+
+        .btn-secondary:hover {
+            background-color: #616161;
+        }
+
+        .btn-error {
+            background-color: var(--error-color);
+        }
+
+        .btn-error:hover {
+            background-color: #d32f2f;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #ccc;
+        }
+
+        .result-box.error {
+            background-color: #ffebee;
+            border-left: 4px solid var(--error-color);
+        }
+
+        .result-box.success {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success-color);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow: auto;
+            max-height: 400px;
+            font-family: monospace;
+        }
+
+        .json-key {
+            color: #0000cc;
+        }
+
+        .json-value {
+            color: #0c5460;
+        }
+
+        .json-string {
+            color: #183691;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .check-item:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .check-icon.success {
+            color: var(--success-color);
+        }
+
+        .check-icon.error {
+            color: var(--error-color);
+        }
+
+        .check-icon.warning {
+            color: var(--warning-color);
+        }
+
+        .check-icon.info {
+            color: var(--info-color);
+        }
+
+        .check-message {
+            flex-grow: 1;
+        }
+
+        .check-status {
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        
+        .code-block-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .fix-suggestion {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .fix-suggestion h4 {
+            margin-top: 0;
+            color: #0d47a1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .issue-found {
+            background-color: #ffe0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="page-title">
+                <i class="fas fa-tools"></i>
+                <h1>Admin Panel Diagnostic Tool</h1>
+            </div>
+            <div>
+                <a href="admin-dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Admin
+                </a>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="dashboard-check">Dashboard Check</div>
+            <div class="tab" data-tab="users-check">Users Check</div>
+            <div class="tab" data-tab="api-check">API Check</div>
+            <div class="tab" data-tab="code-inspector">Code Inspector</div>
+        </div>
+
+        <div class="tab-content active" id="dashboard-check">
+            <div class="card">
+                <div class="card-header">
+                    Dashboard API Diagnostic
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="dashboardApiUrl">API Base URL</label>
+                        <input type="text" id="dashboardApiUrl" value="https://affluence-backends-noae.vercel.app/api" placeholder="e.g., https://affluence-backends-noae.vercel.app/api">
+                    </div>
+                    <div class="form-group">
+                        <label for="dashboardToken">Admin Token (Optional)</label>
+                        <input type="text" id="dashboardToken" placeholder="Bearer token">
+                    </div>
+                    <button class="btn" id="testDashboardApi">Test Dashboard API</button>
+                    
+                    <div id="dashboardResult" class="result-box hidden">
+                        <div id="dashboardStatus"></div>
+                        <pre id="dashboardResponse"></pre>
+                    </div>
+                    
+                    <div id="dashboardDiagnostic" class="hidden">
+                        <h3>Dashboard Diagnostic Results</h3>
+                        <div id="dashboardIssues"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="users-check">
+            <div class="card">
+                <div class="card-header">
+                    Users API Diagnostic
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="usersApiUrl">API Base URL</label>
+                        <input type="text" id="usersApiUrl" value="http://localhost:8000/api" placeholder="e.g., http://localhost:8000/api">
+                    </div>
+                    <div class="form-group">
+                        <label for="usersToken">Admin Token (Optional)</label>
+                        <input type="text" id="usersToken" placeholder="Bearer token">
+                    </div>
+                    <button class="btn" id="testUsersApi">Test Users API</button>
+                    
+                    <div id="usersResult" class="result-box hidden">
+                        <div id="usersStatus"></div>
+                        <pre id="usersResponse"></pre>
+                    </div>
+                    
+                    <div id="usersDiagnostic" class="hidden">
+                        <h3>Users Page Diagnostic Results</h3>
+                        <div id="usersIssues"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="api-check">
+            <div class="card">
+                <div class="card-header">
+                    API Path Analysis
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="jsFilePath">JavaScript File to Analyze</label>
+                        <select id="jsFilePath">
+                            <option value="js/api.js">api.js</option>
+                            <option value="js/admin.js">admin.js</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="analyzeJsFile">Analyze File</button>
+                    
+                    <div id="jsAnalysisResult" class="result-box hidden">
+                        <div id="jsAnalysisStatus"></div>
+                        <div id="jsAnalysisContent"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    API Configuration Check
+                </div>
+                <div class="card-body">
+                    <button class="btn" id="checkApiConfig">Check API Configuration</button>
+                    
+                    <div id="apiConfigResult" class="result-box hidden">
+                        <div id="apiConfigStatus"></div>
+                        <div id="apiConfigContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="code-inspector">
+            <div class="card">
+                <div class="card-header">
+                    JavaScript Code Inspector
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="htmlFile">HTML File to Inspect</label>
+                        <select id="htmlFile">
+                            <option value="admin-dashboard.html">admin-dashboard.html</option>
+                            <option value="admin-users.html">admin-users.html</option>
+                        </select>
+                    </div>
+                    <button class="btn" id="inspectHtmlFile">Inspect HTML & Scripts</button>
+                    
+                    <div id="htmlInspectionResult" class="result-box hidden">
+                        <div id="htmlInspectionStatus"></div>
+                        <div id="htmlInspectionContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper functions
+        function syntaxHighlight(json) {
+            if (!json) return '';
+            
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-value';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-value';
+                } else if (/null/.test(match)) {
+                    cls = 'json-value';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        
+        function addCheckItem(parent, type, message, details) {
+            const item = document.createElement('div');
+            item.className = 'check-item';
+            
+            const icon = document.createElement('i');
+            icon.className = 'check-icon fas';
+            
+            switch(type) {
+                case 'success':
+                    icon.classList.add('fa-check-circle', 'success');
+                    break;
+                case 'error':
+                    icon.classList.add('fa-times-circle', 'error');
+                    break;
+                case 'warning':
+                    icon.classList.add('fa-exclamation-triangle', 'warning');
+                    break;
+                case 'info':
+                    icon.classList.add('fa-info-circle', 'info');
+                    break;
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'check-message';
+            messageDiv.textContent = message;
+            
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'check-status';
+            detailsDiv.textContent = details;
+            
+            item.appendChild(icon);
+            item.appendChild(messageDiv);
+            item.appendChild(detailsDiv);
+            
+            parent.appendChild(item);
+        }
+        
+        function addCodeBlock(parent, title, code) {
+            const codeBlock = document.createElement('div');
+            codeBlock.className = 'code-block';
+            
+            const header = document.createElement('div');
+            header.className = 'code-block-header';
+            header.textContent = title;
+            
+            const codeContent = document.createElement('pre');
+            codeContent.textContent = code;
+            
+            codeBlock.appendChild(header);
+            codeBlock.appendChild(codeContent);
+            parent.appendChild(codeBlock);
+        }
+        
+        function addFixSuggestion(parent, title, description, code) {
+            const fix = document.createElement('div');
+            fix.className = 'fix-suggestion';
+            
+            const fixTitle = document.createElement('h4');
+            fixTitle.textContent = title;
+            
+            const fixDesc = document.createElement('p');
+            fixDesc.textContent = description;
+            
+            fix.appendChild(fixTitle);
+            fix.appendChild(fixDesc);
+            
+            if (code) {
+                const codeBlock = document.createElement('pre');
+                codeBlock.textContent = code;
+                fix.appendChild(codeBlock);
+            }
+            
+            parent.appendChild(fix);
+        }
+
+        // Dashboard API diagnostic
+        async function testDashboardApi() {
+            const apiUrl = document.getElementById('dashboardApiUrl').value.trim();
+            const token = document.getElementById('dashboardToken').value.trim();
+            
+            const resultBox = document.getElementById('dashboardResult');
+            const statusDiv = document.getElementById('dashboardStatus');
+            const responseDiv = document.getElementById('dashboardResponse');
+            const diagnosticDiv = document.getElementById('dashboardDiagnostic');
+            const issuesDiv = document.getElementById('dashboardIssues');
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'result-box';
+            statusDiv.innerHTML = '<div class="loader"></div> Testing dashboard API...';
+            responseDiv.innerText = '';
+            diagnosticDiv.classList.add('hidden');
+            issuesDiv.innerHTML = '';
+            
+            try {
+                const headers = {
+                    'Accept': 'application/json',
+                };
+                
+                if (token) {
+                    headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`${apiUrl}/admin/dashboard/stats`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { error: 'Failed to parse response as JSON' };
+                }
+                
+                if (response.ok) {
+                    resultBox.classList.add('success');
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> API request successful!';
+                    responseDiv.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+                    
+                    // Analyze the response
+                    diagnosticDiv.classList.remove('hidden');
+                    analyzeDashboardResponse(data, issuesDiv);
+                } else {
+                    resultBox.classList.add('error');
+                    statusDiv.innerHTML = `<i class="fas fa-times-circle" style="color: var(--error-color);"></i> API request failed! (${response.status} ${response.statusText})`;
+                    responseDiv.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+                    
+                    // Analyze the error
+                    diagnosticDiv.classList.remove('hidden');
+                    analyzeDashboardError(response.status, data, issuesDiv);
+                }
+            } catch (error) {
+                resultBox.classList.add('error');
+                statusDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error-color);"></i> Request failed!';
+                responseDiv.innerText = error.toString();
+                
+                // Analyze the error
+                diagnosticDiv.classList.remove('hidden');
+                analyzeDashboardError(0, { error: error.message }, issuesDiv);
+            }
+        }
+        
+        function analyzeDashboardResponse(data, issuesDiv) {
+            // Check if the data has the expected structure
+            let hasIssues = false;
+            
+            if (!data.user_count && data.user_count !== 0) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'error', 'Missing user_count in dashboard stats', 'Data structure issue');
+            }
+            
+            if (!data.withdrawal_count && data.withdrawal_count !== 0) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'error', 'Missing withdrawal_count in dashboard stats', 'Data structure issue');
+            }
+            
+            if (!data.task_count && data.task_count !== 0) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'error', 'Missing task_count in dashboard stats', 'Data structure issue');
+            }
+            
+            if (!data.pending_withdrawal_count && data.pending_withdrawal_count !== 0) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'warning', 'Missing pending_withdrawal_count in dashboard stats', 'Data structure issue');
+            }
+            
+            if (!hasIssues) {
+                addCheckItem(issuesDiv, 'success', 'Dashboard API data structure looks correct', 'All expected fields present');
+            }
+            
+            // Now check admin-dashboard.html for potential issues
+            checkDashboardHtml(issuesDiv);
+        }
+        
+        function analyzeDashboardError(status, data, issuesDiv) {
+            if (status === 401 || status === 403) {
+                addCheckItem(issuesDiv, 'error', 'Authentication/Authorization Error', 'Invalid or expired token');
+                addFixSuggestion(issuesDiv, 'Fix Authentication', 'Make sure you\'re using a valid admin token. Try logging in again through the admin-login.html page.');
+            } else if (status === 404) {
+                addCheckItem(issuesDiv, 'error', 'API Endpoint Not Found', 'The dashboard stats endpoint might be incorrect');
+                addFixSuggestion(issuesDiv, 'Check API Endpoint', 'Verify that the dashboard stats endpoint is correctly defined in admin.js');
+            } else if (status === 0) {
+                addCheckItem(issuesDiv, 'error', 'Network Error', data.error || 'Failed to connect to the API');
+                addFixSuggestion(issuesDiv, 'Check API Server', 'Make sure the backend API server is running and accessible.');
+            } else {
+                addCheckItem(issuesDiv, 'error', `Server Error (${status})`, data.detail || 'Unknown error');
+            }
+            
+            // Check admin.js for dashboard API definition
+            checkDashboardApiDefinition(issuesDiv);
+        }
+        
+        async function checkDashboardHtml(issuesDiv) {
+            try {
+                const response = await fetch('admin-dashboard.html');
+                const html = await response.text();
+                
+                // Check if dashboard.html properly loads the scripts
+                if (!html.includes('src="js/api.js"')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing API Script', 'admin-dashboard.html does not include api.js');
+                    addFixSuggestion(issuesDiv, 'Add API Script', 'Add the api.js script to admin-dashboard.html', '<script src="js/api.js"></script>');
+                }
+                
+                if (!html.includes('src="js/admin.js"')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing Admin Script', 'admin-dashboard.html does not include admin.js');
+                    addFixSuggestion(issuesDiv, 'Add Admin Script', 'Add the admin.js script to admin-dashboard.html', '<script src="js/admin.js"></script>');
+                }
+                
+                // Check if it calls the right functions
+                if (!html.includes('adminAPI.getDashboardStats')) {
+                    addCheckItem(issuesDiv, 'warning', 'Dashboard Stats Function', 'admin-dashboard.html might not be calling getDashboardStats correctly');
+                    addFixSuggestion(issuesDiv, 'Use adminAPI object', 'Make sure to use the adminAPI object to call getDashboardStats', 'const stats = await adminAPI.getDashboardStats();');
+                }
+            } catch (error) {
+                addCheckItem(issuesDiv, 'error', 'Failed to load admin-dashboard.html', error.message);
+            }
+        }
+        
+        async function checkDashboardApiDefinition(issuesDiv) {
+            try {
+                const response = await fetch('js/admin.js');
+                const js = await response.text();
+                
+                // Check if admin.js has the dashboard stats API call
+                if (!js.includes('getDashboardStats')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing Dashboard API', 'getDashboardStats function is not defined in admin.js');
+                    addFixSuggestion(issuesDiv, 'Add Dashboard API Function', 'Add the getDashboardStats function to admin.js', 'getDashboardStats: async () => { return await api.get(adminPath(\'/dashboard/stats\')); },');
+                } else {
+                    // Check if the path is correct
+                    const dashboardApiMatch = js.match(/getDashboardStats.*?adminPath\(['"](.*?)['"]\)/s);
+                    if (dashboardApiMatch && dashboardApiMatch[1]) {
+                        const path = dashboardApiMatch[1];
+                        if (path !== '/dashboard/stats') {
+                            addCheckItem(issuesDiv, 'warning', 'Dashboard API Path', `Using path "${path}" instead of "/dashboard/stats"`);
+                        } else {
+                            addCheckItem(issuesDiv, 'success', 'Dashboard API Path', 'Using correct path "/dashboard/stats"');
+                        }
+                    }
+                }
+                
+                // Check adminPath function
+                if (!js.includes('function adminPath')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing adminPath Function', 'adminPath function is not defined in admin.js');
+                    addFixSuggestion(issuesDiv, 'Add adminPath Function', 'Add the adminPath function to admin.js', 'function adminPath(path) { return `/admin${path}`; }');
+                }
+            } catch (error) {
+                addCheckItem(issuesDiv, 'error', 'Failed to load admin.js', error.message);
+            }
+        }
+        
+        // Users API diagnostic
+        async function testUsersApi() {
+            const apiUrl = document.getElementById('usersApiUrl').value.trim();
+            const token = document.getElementById('usersToken').value.trim();
+            
+            const resultBox = document.getElementById('usersResult');
+            const statusDiv = document.getElementById('usersStatus');
+            const responseDiv = document.getElementById('usersResponse');
+            const diagnosticDiv = document.getElementById('usersDiagnostic');
+            const issuesDiv = document.getElementById('usersIssues');
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'result-box';
+            statusDiv.innerHTML = '<div class="loader"></div> Testing users API...';
+            responseDiv.innerText = '';
+            diagnosticDiv.classList.add('hidden');
+            issuesDiv.innerHTML = '';
+            
+            try {
+                const headers = {
+                    'Accept': 'application/json',
+                };
+                
+                if (token) {
+                    headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+                }
+                
+                const response = await fetch(`${apiUrl}/admin/users?skip=0&limit=10`, {
+                    method: 'GET',
+                    headers: headers
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { error: 'Failed to parse response as JSON' };
+                }
+                
+                if (response.ok) {
+                    resultBox.classList.add('success');
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> API request successful!';
+                    responseDiv.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+                    
+                    // Analyze the response
+                    diagnosticDiv.classList.remove('hidden');
+                    analyzeUsersResponse(data, issuesDiv);
+                } else {
+                    resultBox.classList.add('error');
+                    statusDiv.innerHTML = `<i class="fas fa-times-circle" style="color: var(--error-color);"></i> API request failed! (${response.status} ${response.statusText})`;
+                    responseDiv.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+                    
+                    // Analyze the error
+                    diagnosticDiv.classList.remove('hidden');
+                    analyzeUsersError(response.status, data, issuesDiv);
+                }
+            } catch (error) {
+                resultBox.classList.add('error');
+                statusDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error-color);"></i> Request failed!';
+                responseDiv.innerText = error.toString();
+                
+                // Analyze the error
+                diagnosticDiv.classList.remove('hidden');
+                analyzeUsersError(0, { error: error.message }, issuesDiv);
+            }
+        }
+        
+        function analyzeUsersResponse(data, issuesDiv) {
+            // Check if the data has the expected structure
+            let hasIssues = false;
+            
+            if (!data.users) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'error', 'Missing users array in response', 'Data structure issue');
+            } else if (!Array.isArray(data.users)) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'error', 'Users property is not an array', 'Data structure issue');
+            }
+            
+            if (data.total === undefined) {
+                hasIssues = true;
+                addCheckItem(issuesDiv, 'warning', 'Missing total count in users response', 'Data structure issue');
+            }
+            
+            if (!hasIssues) {
+                addCheckItem(issuesDiv, 'success', 'Users API data structure looks correct', 'All expected fields present');
+            }
+            
+            // Now check admin-users.html for potential issues
+            checkUsersHtml(issuesDiv);
+        }
+        
+        function analyzeUsersError(status, data, issuesDiv) {
+            if (status === 401 || status === 403) {
+                addCheckItem(issuesDiv, 'error', 'Authentication/Authorization Error', 'Invalid or expired token');
+                addFixSuggestion(issuesDiv, 'Fix Authentication', 'Make sure you\'re using a valid admin token. Try logging in again through the admin-login.html page.');
+            } else if (status === 404) {
+                addCheckItem(issuesDiv, 'error', 'API Endpoint Not Found', 'The users endpoint might be incorrect');
+                addFixSuggestion(issuesDiv, 'Check API Endpoint', 'Verify that the users endpoint is correctly defined in admin.js');
+            } else if (status === 0) {
+                addCheckItem(issuesDiv, 'error', 'Network Error', data.error || 'Failed to connect to the API');
+                addFixSuggestion(issuesDiv, 'Check API Server', 'Make sure the backend API server is running and accessible.');
+            } else {
+                addCheckItem(issuesDiv, 'error', `Server Error (${status})`, data.detail || 'Unknown error');
+            }
+            
+            // Check admin.js for users API definition
+            checkUsersApiDefinition(issuesDiv);
+        }
+        
+        async function checkUsersHtml(issuesDiv) {
+            try {
+                const response = await fetch('admin-users.html');
+                const html = await response.text();
+                
+                // Check if users.html properly loads the scripts
+                if (!html.includes('src="js/api.js"')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing API Script', 'admin-users.html does not include api.js');
+                    addFixSuggestion(issuesDiv, 'Add API Script', 'Add the api.js script to admin-users.html', '<script src="js/api.js"></script>');
+                }
+                
+                if (!html.includes('src="js/admin.js"')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing Admin Script', 'admin-users.html does not include admin.js');
+                    addFixSuggestion(issuesDiv, 'Add Admin Script', 'Add the admin.js script to admin-users.html', '<script src="js/admin.js"></script>');
+                }
+                
+                // Check if it calls the right functions
+                if (!html.includes('adminAPI.getUsers')) {
+                    addCheckItem(issuesDiv, 'warning', 'Users List Function', 'admin-users.html might not be calling getUsers correctly');
+                    addFixSuggestion(issuesDiv, 'Use adminAPI object', 'Make sure to use the adminAPI object to call getUsers', 'const userData = await adminAPI.getUsers(skip, limit);');
+                }
+            } catch (error) {
+                addCheckItem(issuesDiv, 'error', 'Failed to load admin-users.html', error.message);
+            }
+        }
+        
+        async function checkUsersApiDefinition(issuesDiv) {
+            try {
+                const response = await fetch('js/admin.js');
+                const js = await response.text();
+                
+                // Check if admin.js has the users API call
+                if (!js.includes('getUsers')) {
+                    addCheckItem(issuesDiv, 'error', 'Missing Users API', 'getUsers function is not defined in admin.js');
+                    addFixSuggestion(issuesDiv, 'Add Users API Function', 'Add the getUsers function to admin.js', 'getUsers: async (skip = 0, limit = 10) => { return await api.get(adminPath(`/users?skip=${skip}&limit=${limit}`)); },');
+                } else {
+                    // Check if the path is correct
+                    const usersApiMatch = js.match(/getUsers.*?adminPath\(['"](.*?)['"]\)/s);
+                    if (usersApiMatch && usersApiMatch[1]) {
+                        const path = usersApiMatch[1];
+                        if (!path.includes('/users')) {
+                            addCheckItem(issuesDiv, 'warning', 'Users API Path', `Using path "${path}" instead of "/users?skip=${skip}&limit=${limit}"`);
+                        } else {
+                            addCheckItem(issuesDiv, 'success', 'Users API Path', 'Path includes "/users"');
+                        }
+                    }
+                }
+            } catch (error) {
+                addCheckItem(issuesDiv, 'error', 'Failed to load admin.js', error.message);
+            }
+        }
+        
+        // Analyze JS files
+        async function analyzeJsFile() {
+            const filePath = document.getElementById('jsFilePath').value;
+            
+            const resultBox = document.getElementById('jsAnalysisResult');
+            const statusDiv = document.getElementById('jsAnalysisStatus');
+            const contentDiv = document.getElementById('jsAnalysisContent');
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'result-box';
+            statusDiv.innerHTML = '<div class="loader"></div> Analyzing JavaScript file...';
+            contentDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(filePath);
+                const js = await response.text();
+                
+                resultBox.classList.add('success');
+                statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> File loaded successfully';
+                
+                if (filePath === 'js/api.js') {
+                    analyzeApiJs(js, contentDiv);
+                } else if (filePath === 'js/admin.js') {
+                    analyzeAdminJs(js, contentDiv);
+                }
+            } catch (error) {
+                resultBox.classList.add('error');
+                statusDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error-color);"></i> Failed to load file';
+                contentDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        function analyzeApiJs(js, contentDiv) {
+            contentDiv.innerHTML = '<h3>API.js Analysis</h3>';
+            
+            // Check for api object initialization
+            const apiDefMatch = js.match(/const\s+api\s*=\s*{/);
+            if (!apiDefMatch) {
+                addCheckItem(contentDiv, 'error', 'API Object Definition', 'Could not find api object definition');
+            } else {
+                addCheckItem(contentDiv, 'success', 'API Object Definition', 'api object is defined');
+            }
+            
+            // Check for baseUrl setting
+            const baseUrlMatch = js.match(/baseUrl\s*:\s*['"]([^'"]+)['"]/);
+            if (baseUrlMatch) {
+                const baseUrl = baseUrlMatch[1];
+                addCheckItem(contentDiv, 'info', 'Base URL', `API base URL is set to: ${baseUrl}`);
+            } else {
+                addCheckItem(contentDiv, 'warning', 'Base URL', 'Could not find baseUrl definition');
+            }
+            
+            // Check for essential methods
+            if (js.includes('async get(')) {
+                addCheckItem(contentDiv, 'success', 'GET Method', 'get() method is defined');
+            } else {
+                addCheckItem(contentDiv, 'error', 'GET Method', 'get() method is missing');
+            }
+            
+            if (js.includes('async post(')) {
+                addCheckItem(contentDiv, 'success', 'POST Method', 'post() method is defined');
+            } else {
+                addCheckItem(contentDiv, 'error', 'POST Method', 'post() method is missing');
+            }
+            
+            if (js.includes('async put(')) {
+                addCheckItem(contentDiv, 'success', 'PUT Method', 'put() method is defined');
+            } else {
+                addCheckItem(contentDiv, 'error', 'PUT Method', 'put() method is missing');
+            }
+            
+            if (js.includes('async delete(')) {
+                addCheckItem(contentDiv, 'success', 'DELETE Method', 'delete() method is defined');
+            } else {
+                addCheckItem(contentDiv, 'error', 'DELETE Method', 'delete() method is missing');
+            }
+            
+            // Add detailed API.js implementation suggestion if issues found
+            if (!apiDefMatch || !baseUrlMatch || !js.includes('async get(')) {
+                addFixSuggestion(contentDiv, 'Fix api.js Implementation', 'Here\'s a correct implementation of api.js with all required methods:', 
+`// api.js - API client for the Affluence backend
+const api = {
+    // Base URL for API calls
+    baseUrl: 'http://localhost:8000/api',
+    
+    // Get the stored token
+    getToken() {
+        return localStorage.getItem('token');
+    },
+    
+    // Build headers with authorization if token exists
+    getHeaders(contentType = 'application/json') {
+        const headers = {
+            'Content-Type': contentType,
+            'Accept': 'application/json',
+        };
+        
+        const token = this.getToken();
+        if (token) {
+            headers['Authorization'] = \`Bearer \${token}\`;
+        }
+        
+        return headers;
+    },
+    
+    // Handle response and parse JSON
+    async handleResponse(response) {
+        const data = await response.json();
+        
+        if (!response.ok) {
+            // If the server responded with an error message
+            const error = new Error(data.detail || response.statusText);
+            error.status = response.status;
+            error.data = data;
+            throw error;
+        }
+        
+        return data;
+    },
+    
+    // GET request
+    async get(endpoint) {
+        const url = \`\${this.baseUrl}\${endpoint}\`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: this.getHeaders()
+        });
+        
+        return this.handleResponse(response);
+    },
+    
+    // POST request
+    async post(endpoint, data) {
+        const url = \`\${this.baseUrl}\${endpoint}\`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(data)
+        });
+        
+        return this.handleResponse(response);
+    },
+    
+    // PUT request
+    async put(endpoint, data) {
+        const url = \`\${this.baseUrl}\${endpoint}\`;
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            body: JSON.stringify(data)
+        });
+        
+        return this.handleResponse(response);
+    },
+    
+    // DELETE request
+    async delete(endpoint) {
+        const url = \`\${this.baseUrl}\${endpoint}\`;
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: this.getHeaders()
+        });
+        
+        return this.handleResponse(response);
+    },
+};`);
+            }
+        }
+        
+        function analyzeAdminJs(js, contentDiv) {
+            contentDiv.innerHTML = '<h3>Admin.js Analysis</h3>';
+            
+            // Check for adminAPI object initialization
+            const adminApiDefMatch = js.match(/const\s+adminAPI\s*=\s*{/);
+            if (!adminApiDefMatch) {
+                addCheckItem(contentDiv, 'error', 'Admin API Object Definition', 'Could not find adminAPI object definition');
+            } else {
+                addCheckItem(contentDiv, 'success', 'Admin API Object Definition', 'adminAPI object is defined');
+            }
+            
+            // Check for adminPath function
+            const adminPathMatch = js.match(/function\s+adminPath\s*\(\s*path\s*\)\s*{/);
+            if (!adminPathMatch) {
+                addCheckItem(contentDiv, 'error', 'adminPath Function', 'Could not find adminPath function definition');
+            } else {
+                addCheckItem(contentDiv, 'success', 'adminPath Function', 'adminPath function is defined');
+            }
+            
+            // Check for important admin API methods
+            const apiMethods = [
+                { name: 'getDashboardStats', endpoint: '/dashboard/stats' },
+                { name: 'getUsers', endpoint: '/users' },
+                { name: 'getUser', endpoint: '/users/' },
+                { name: 'updateUser', endpoint: '/users/' },
+                { name: 'getTasks', endpoint: '/tasks' },
+                { name: 'getCoupons', endpoint: '/coupons' },
+                { name: 'getWithdrawals', endpoint: '/withdrawals' }
+            ];
+            
+            let missingMethods = [];
+            
+            for (const method of apiMethods) {
+                const methodRegex = new RegExp(`${method.name}\\s*:\\s*async`);
+                if (js.match(methodRegex)) {
+                    // Check if the endpoint is correct
+                    const endpointRegex = new RegExp(`${method.name}.*?adminPath\\s*\\(['\"]([^'\"]*)['\"]\\)`);
+                    const match = js.match(endpointRegex);
+                    
+                    if (match && match[1]) {
+                        const path = match[1];
+                        if (path.includes(method.endpoint)) {
+                            addCheckItem(contentDiv, 'success', `${method.name} Method`, `Defined with correct endpoint: ${path}`);
+                        } else {
+                            addCheckItem(contentDiv, 'warning', `${method.name} Method`, `Endpoint mismatch. Expected: ${method.endpoint}, Found: ${path}`);
+                        }
+                    } else {
+                        addCheckItem(contentDiv, 'warning', `${method.name} Method`, 'Method found but endpoint could not be verified');
+                    }
+                } else {
+                    addCheckItem(contentDiv, 'error', `${method.name} Method`, 'Method is missing');
+                    missingMethods.push(method);
+                }
+            }
+            
+            // Add detailed admin.js implementation suggestion if issues found
+            if (missingMethods.length > 0 || !adminApiDefMatch || !adminPathMatch) {
+                // Create snippet for missing methods
+                let missingMethodsCode = '';
+                for (const method of missingMethods) {
+                    switch (method.name) {
+                        case 'getDashboardStats':
+                            missingMethodsCode += `    // Dashboard stats\n    getDashboardStats: async () => { return await api.get(adminPath('/dashboard/stats')); },\n\n`;
+                            break;
+                        case 'getUsers':
+                            missingMethodsCode += `    // Users management\n    getUsers: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/users?skip=\${skip}&limit=\${limit}\`)); },\n\n`;
+                            break;
+                        case 'getUser':
+                            missingMethodsCode += `    getUser: async (id) => { return await api.get(adminPath(\`/users/\${id}\`)); },\n\n`;
+                            break;
+                        case 'updateUser':
+                            missingMethodsCode += `    updateUser: async (id, data) => { return await api.put(adminPath(\`/users/\${id}\`), data); },\n\n`;
+                            break;
+                        case 'getTasks':
+                            missingMethodsCode += `    // Tasks management\n    getTasks: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/tasks?skip=\${skip}&limit=\${limit}\`)); },\n\n`;
+                            break;
+                        case 'getCoupons':
+                            missingMethodsCode += `    // Coupons management\n    getCoupons: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/coupons?skip=\${skip}&limit=\${limit}\`)); },\n\n`;
+                            break;
+                        case 'getWithdrawals':
+                            missingMethodsCode += `    // Withdrawals management\n    getWithdrawals: async (skip = 0, limit = 10, status = '') => { 
+        const query = status ? \`?skip=\${skip}&limit=\${limit}&status=\${status}\` : \`?skip=\${skip}&limit=\${limit}\`;
+        return await api.get(adminPath(\`/withdrawals\${query}\`)); 
+    },\n\n`;
+                            break;
+                    }
+                }
+                
+                // Add fix suggestion with all the missing methods
+                addFixSuggestion(contentDiv, 'Fix Missing Methods in admin.js', 'Add these missing methods to your admin.js file:', missingMethodsCode);
+                
+                // If adminPath is missing, suggest the full implementation
+                if (!adminPathMatch) {
+                    addFixSuggestion(contentDiv, 'Add adminPath Function', 'Add this adminPath function to your admin.js file:', 
+`// Helper function to build admin API paths
+function adminPath(path) {
+    return \`/admin\${path}\`;
+}`);
+                }
+                
+                // If adminAPI object is missing, suggest the full implementation
+                if (!adminApiDefMatch) {
+                    addFixSuggestion(contentDiv, 'Add adminAPI Object', 'Make sure your admin.js file has this adminAPI object:', 
+`// Admin API wrapper
+const adminAPI = {
+    // Authentication
+    login: async (email, password) => { return await api.post('/auth/admin/login', { email, password }); },
+    
+    // Dashboard stats
+    getDashboardStats: async () => { return await api.get(adminPath('/dashboard/stats')); },
+    
+    // Users management
+    getUsers: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/users?skip=\${skip}&limit=\${limit}\`)); },
+    getUser: async (id) => { return await api.get(adminPath(\`/users/\${id}\`)); },
+    updateUser: async (id, data) => { return await api.put(adminPath(\`/users/\${id}\`), data); },
+    
+    // Tasks management
+    getTasks: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/tasks?skip=\${skip}&limit=\${limit}\`)); },
+    
+    // Rest of your API methods...
+};`);
+                }
+            }
+        }
+        
+        // API configuration check
+        async function checkApiConfig() {
+            const resultBox = document.getElementById('apiConfigResult');
+            const statusDiv = document.getElementById('apiConfigStatus');
+            const contentDiv = document.getElementById('apiConfigContent');
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'result-box';
+            statusDiv.innerHTML = '<div class="loader"></div> Checking API configuration...';
+            contentDiv.innerHTML = '';
+            
+            try {
+                // Check both API.js and admin.js
+                const apiResponse = await fetch('js/api.js');
+                const apiJs = await apiResponse.text();
+                
+                const adminResponse = await fetch('js/admin.js');
+                const adminJs = await adminResponse.text();
+                
+                // Check token storage and retrieval
+                let tokenMethodExists = apiJs.includes('getToken') || apiJs.includes('localStorage.getItem');
+                let adminPathExists = adminJs.includes('function adminPath');
+                
+                resultBox.classList.add('success');
+                statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> Configuration analysis complete';
+                
+                contentDiv.innerHTML = '<h3>API Configuration Analysis</h3>';
+                
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <tr>
+                        <th>Configuration Item</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                    </tr>
+                    <tr class="${!tokenMethodExists ? 'issue-found' : ''}">
+                        <td>Token Storage/Retrieval</td>
+                        <td>${tokenMethodExists ? 'Found' : 'Not Found'}</td>
+                        <td>${tokenMethodExists ? 'API.js handles token storage/retrieval correctly' : 'Token management may be missing in API.js'}</td>
+                    </tr>
+                    <tr class="${!adminPathExists ? 'issue-found' : ''}">
+                        <td>Admin Path Function</td>
+                        <td>${adminPathExists ? 'Found' : 'Not Found'}</td>
+                        <td>${adminPathExists ? 'adminPath function exists in admin.js' : 'adminPath function is missing in admin.js'}</td>
+                    </tr>
+                `;
+                
+                contentDiv.appendChild(table);
+                
+                // Check if admin.js imports api.js
+                const adminJsFirstLines = adminJs.split('\n').slice(0, 20).join('\n');
+                if (!adminJsFirstLines.includes('api.') && !adminJs.includes('api.get(')) {
+                    addCheckItem(contentDiv, 'error', 'API Usage in admin.js', 'admin.js may not be using the api object correctly');
+                    addFixSuggestion(contentDiv, 'Use api Object in admin.js', 'Make sure admin.js uses the global api object for requests',
+`// Example of correct API usage in admin.js
+const adminAPI = {
+    getDashboardStats: async () => { return await api.get(adminPath('/dashboard/stats')); },
+    getUsers: async (skip = 0, limit = 10) => { return await api.get(adminPath(\`/users?skip=\${skip}&limit=\${limit}\`)); },
+    // more methods...
+};`);
+                }
+                
+                // Check HTML files for script inclusion
+                const htmlFiles = ['admin-dashboard.html', 'admin-users.html'];
+                let scriptIssues = false;
+                
+                for (const file of htmlFiles) {
+                    try {
+                        const response = await fetch(file);
+                        const html = await response.text();
+                        
+                        const apiJsIncluded = html.includes('src="js/api.js"');
+                        const adminJsIncluded = html.includes('src="js/admin.js"');
+                        const correctOrder = html.indexOf('src="js/api.js"') < html.indexOf('src="js/admin.js"');
+                        
+                        if (!apiJsIncluded || !adminJsIncluded || !correctOrder) {
+                            scriptIssues = true;
+                            
+                            const row = document.createElement('tr');
+                            row.className = 'issue-found';
+                            row.innerHTML = `
+                                <td>${file} Scripts</td>
+                                <td>${apiJsIncluded && adminJsIncluded ? 'Included' : 'Missing'}</td>
+                                <td>
+                                    ${!apiJsIncluded ? 'api.js not included. ' : ''}
+                                    ${!adminJsIncluded ? 'admin.js not included. ' : ''}
+                                    ${apiJsIncluded && adminJsIncluded && !correctOrder ? 'Scripts in wrong order (api.js must come before admin.js). ' : ''}
+                                </td>
+                            `;
+                            table.appendChild(row);
+                        }
+                    } catch (error) {
+                        console.error(`Failed to check ${file}:`, error);
+                    }
+                }
+                
+                if (scriptIssues) {
+                    addFixSuggestion(contentDiv, 'Fix Script Inclusion', 'Make sure all admin pages include the scripts in the correct order:',
+`<!-- Include API scripts in the correct order -->
+<script src="js/api.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/admin-shared.js"></script>`);
+                }
+                
+            } catch (error) {
+                resultBox.classList.add('error');
+                statusDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error-color);"></i> Configuration check failed';
+                contentDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // HTML & Script inspection
+        async function inspectHtmlFile() {
+            const htmlFile = document.getElementById('htmlFile').value;
+            
+            const resultBox = document.getElementById('htmlInspectionResult');
+            const statusDiv = document.getElementById('htmlInspectionStatus');
+            const contentDiv = document.getElementById('htmlInspectionContent');
+            
+            resultBox.classList.remove('hidden');
+            resultBox.className = 'result-box';
+            statusDiv.innerHTML = '<div class="loader"></div> Inspecting HTML file...';
+            contentDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch(htmlFile);
+                const html = await response.text();
+                
+                resultBox.classList.add('success');
+                statusDiv.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i> File loaded successfully';
+                
+                // Analyze the HTML file
+                contentDiv.innerHTML = `<h3>Inspection Results for ${htmlFile}</h3>`;
+                
+                // Check for script inclusions
+                const scripts = [];
+                let match;
+                const scriptRegex = /<script\s+src=["']([^"']+)["'][^>]*>/g;
+                
+                while (match = scriptRegex.exec(html)) {
+                    scripts.push(match[1]);
+                }
+                
+                addCodeBlock(contentDiv, 'Included Scripts', scripts.join('\n'));
+                
+                // Check for API.js and admin.js
+                if (!scripts.includes('js/api.js')) {
+                    addCheckItem(contentDiv, 'error', 'Missing API Script', 'js/api.js is not included in the HTML file');
+                    addFixSuggestion(contentDiv, 'Add API Script', 'Add this script tag before admin.js', '<script src="js/api.js"></script>');
+                }
+                
+                if (!scripts.includes('js/admin.js')) {
+                    addCheckItem(contentDiv, 'error', 'Missing Admin Script', 'js/admin.js is not included in the HTML file');
+                    addFixSuggestion(contentDiv, 'Add Admin Script', 'Add this script tag after api.js', '<script src="js/admin.js"></script>');
+                }
+                
+                if (scripts.includes('js/api.js') && scripts.includes('js/admin.js')) {
+                    const apiIndex = scripts.indexOf('js/api.js');
+                    const adminIndex = scripts.indexOf('js/admin.js');
+                    
+                    if (adminIndex < apiIndex) {
+                        addCheckItem(contentDiv, 'error', 'Script Order Issue', 'admin.js is included before api.js');
+                        addFixSuggestion(contentDiv, 'Fix Script Order', 'Make sure api.js comes before admin.js', 
+`<script src="js/api.js"></script>
+<script src="js/admin.js"></script>`);
+                    } else {
+                        addCheckItem(contentDiv, 'success', 'Script Order', 'Scripts are included in the correct order');
+                    }
+                }
+                
+                // Check for inline script that uses adminAPI
+                let inlineScript = '';
+                const scriptBlocks = html.match(/<script>([\s\S]*?)<\/script>/g);
+                
+                if (scriptBlocks) {
+                    for (const block of scriptBlocks) {
+                        const scriptContent = block.replace(/<script>|<\/script>/g, '').trim();
+                        if (scriptContent) {
+                            inlineScript += scriptContent + '\n\n';
+                            
+                            // Check for adminAPI usage
+                            if (scriptContent.includes('adminAPI.')) {
+                                const adminApiCalls = scriptContent.match(/adminAPI\.\w+/g);
+                                if (adminApiCalls) {
+                                    addCodeBlock(contentDiv, 'adminAPI Calls Found', adminApiCalls.join('\n'));
+                                }
+                            } else {
+                                addCheckItem(contentDiv, 'warning', 'No adminAPI Calls', 'Could not find adminAPI calls in the inline script');
+                                addFixSuggestion(contentDiv, 'Use adminAPI Object', 'Make sure to use the adminAPI object for API calls', 'const userData = await adminAPI.getUsers(skip, limit);');
+                            }
+                        }
+                    }
+                }
+                
+                if (inlineScript) {
+                    addCodeBlock(contentDiv, 'Inline Script Analysis', inlineScript);
+                } else {
+                    addCheckItem(contentDiv, 'warning', 'No Inline Script', 'Could not find inline script in the HTML file');
+                }
+                
+            } catch (error) {
+                resultBox.classList.add('error');
+                statusDiv.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error-color);"></i> Failed to load file';
+                contentDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('testDashboardApi').addEventListener('click', testDashboardApi);
+            document.getElementById('testUsersApi').addEventListener('click', testUsersApi);
+            document.getElementById('analyzeJsFile').addEventListener('click', analyzeJsFile);
+            document.getElementById('checkApiConfig').addEventListener('click', checkApiConfig);
+            document.getElementById('inspectHtmlFile').addEventListener('click', inspectHtmlFile);
+            
+            // Share token between tabs
+            document.getElementById('dashboardToken').addEventListener('input', e => {
+                document.getElementById('usersToken').value = e.target.value;
+            });
+            document.getElementById('usersToken').addEventListener('input', e => {
+                document.getElementById('dashboardToken').value = e.target.value;
+            });
+            
+            // Share API URL between tabs
+            document.getElementById('dashboardApiUrl').addEventListener('input', e => {
+                document.getElementById('usersApiUrl').value = e.target.value;
+            });
+            document.getElementById('usersApiUrl').addEventListener('input', e => {
+                document.getElementById('dashboardApiUrl').value = e.target.value;
+            });
+            
+            // Try to get token from localStorage
+            const token = localStorage.getItem('token') || localStorage.getItem('affluence_token');
+            if (token) {
+                document.getElementById('dashboardToken').value = token;
+                document.getElementById('usersToken').value = token;
+            }
+        });
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + '/admin/dashboard', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

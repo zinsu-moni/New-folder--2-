@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-logs.html" class="nav-item active">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                    <a href="vendor-lounge.html" class="nav-item" id="vendorMenuItem" style="display: none;">
+                        <i class="fas fa-store"></i>
+                        <span>Vendor Lounge</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">System Audit Logs</h1>
+                    <div class="header-actions">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <select id="actionFilter" class="form-control" onchange="loadLogs()">
+                                <option value="">All Actions</option>
+                                <option value="role_changed">Role Changed</option>
+                                <option value="user_status_changed">User Status Changed</option>
+                                <option value="user_deleted">User Deleted</option>
+                                <option value="coupon_created">Coupon Created</option>
+                                <option value="coupon_assigned">Coupon Assigned</option>
+                                <option value="coupon_revoked">Coupon Revoked</option>
+                                <option value="announcement_created">Announcement Created</option>
+                                <option value="withdrawal_approved">Withdrawal Approved</option>
+                                <option value="withdrawal_rejected">Withdrawal Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">All Logs</h2>
+                    <span id="logCount" style="color: var(--text-light); font-size: 14px;">Loading...</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>Performed By</th>
+                                <th>Target User</th>
+                                <th>Metadata</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="loading"><div class="spinner"></div></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        async function loadLogs() {
+            try {
+                const actionFilter = document.getElementById('actionFilter').value;
+                const logs = await adminAPI.getLogs(0, 200, actionFilter || null);
+                const tbody = document.getElementById('logsTableBody');
+                document.getElementById('logCount').textContent = `${logs.length} log(s)`;
+
+                if (!logs.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6" class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>No Logs Found</h3>
+                            <p>No entries for the selected filter</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => `
+                    <tr>
+                        <td style="white-space: nowrap; font-size: 13px;">${formatDate(log.created_at)}</td>
+                        <td><span class="badge badge-info">${log.action}</span></td>
+                        <td>${log.description}</td>
+                        <td>Admin ID: ${log.performed_by}</td>
+                        <td>${log.target_user ? `User ID: ${log.target_user}` : '-'}</td>
+                        <td style="font-size: 11px; color: var(--text-light); max-width: 280px; overflow: hidden; text-overflow: ellipsis;">
+                            ${log.log_metadata || '-'}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                const tbody = document.getElementById('logsTableBody');
+                tbody.innerHTML = `
+                    <tr><td colspan="6" class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error Loading Logs</h3>
+                        <p>${error.message}</p>
+                    </td></tr>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initAdminUI();
+            loadLogs();
+        });
+    </script>
+</body>
+</html>

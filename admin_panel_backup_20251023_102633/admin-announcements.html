@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-announcements.html" class="nav-item active">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-logs.html" class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                    <a href="vendor-lounge.html" class="nav-item" id="vendorMenuItem" style="display: none;">
+                        <i class="fas fa-store"></i>
+                        <span>Vendor Lounge</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">System Announcements</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="createAnnouncementModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Announcement</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">All Announcements</h2>
+                    <span id="announcementCount" style="color: var(--text-light); font-size: 14px;">Loading...</span>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Content</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="announcementsTableBody">
+                            <tr>
+                                <td colspan="5">
+                                    <div class="loading"><div class="spinner"></div></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        async function loadAnnouncements() {
+            try {
+                const announcements = await adminAPI.getAnnouncements();
+                const tbody = document.getElementById('announcementsTableBody');
+                document.getElementById('announcementCount').textContent = `${announcements.length} announcement(s)`;
+
+                if (!announcements.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="5" class="empty-state">
+                            <i class="fas fa-bullhorn"></i>
+                            <h3>No Announcements Found</h3>
+                            <p>Create your first announcement</p>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = announcements.map(ann => `
+                    <tr>
+                        <td><strong>${ann.title}</strong></td>
+                        <td>${ann.content.substring(0, 100)}${ann.content.length > 100 ? '...' : ''}</td>
+                        <td>
+                            <span class="badge ${ann.is_active ? 'badge-success' : 'badge-danger'}">
+                                ${ann.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td style="font-size: 13px;">${formatDate(ann.created_at)}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-sm btn-primary" onclick='editAnnouncement(${JSON.stringify(ann)})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAnnouncementConfirm(${ann.id}, '${ann.title.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+                const tbody = document.getElementById('announcementsTableBody');
+                tbody.innerHTML = `
+                    <tr><td colspan="5" class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error Loading Announcements</h3>
+                        <p>${error.message}</p>
+                    </td></tr>
+                `;
+            }
+        }
+
+        function createAnnouncementModal() {
+            showFormModal('Create System Announcement', [
+                { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Announcement title' },
+                { name: 'content', label: 'Content', type: 'textarea', required: true, placeholder: 'Announcement message...' },
+                { name: 'is_active', label: 'Status', type: 'select', required: true, options: [
+                    { value: 'true', label: 'Active (Visible to Users)' },
+                    { value: 'false', label: 'Inactive' }
+                ]}
+            ], async (data) => {
+                try {
+                    data.is_active = data.is_active === 'true';
+                    await adminAPI.createAnnouncement(data);
+                    showToast('Announcement created successfully!', 'success');
+                    loadAnnouncements();
+                } catch (error) {
+                    showToast('Failed to create announcement: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function editAnnouncement(ann) {
+            showFormModal('Edit Announcement', [
+                { name: 'title', label: 'Title', type: 'text', required: true, value: ann.title },
+                { name: 'content', label: 'Content', type: 'textarea', required: true, value: ann.content },
+                { name: 'is_active', label: 'Status', type: 'select', required: true, value: ann.is_active.toString(), options: [
+                    { value: 'true', label: 'Active (Visible to Users)' },
+                    { value: 'false', label: 'Inactive' }
+                ]}
+            ], async (data) => {
+                try {
+                    data.is_active = data.is_active === 'true';
+                    await adminAPI.updateAnnouncement(ann.id, data);
+                    showToast('Announcement updated successfully!', 'success');
+                    loadAnnouncements();
+                } catch (error) {
+                    showToast('Failed to update announcement: ' + error.message, 'error');
+                }
+            });
+        }
+
+        function deleteAnnouncementConfirm(annId, title) {
+            showModal('Delete Announcement', `Are you sure you want to delete announcement <strong>${title}</strong>? This action cannot be undone.`, async () => {
+                try {
+                    await adminAPI.deleteAnnouncement(annId);
+                    showToast('Announcement deleted successfully!', 'success');
+                    loadAnnouncements();
+                } catch (error) {
+                    showToast('Failed to delete announcement: ' + error.message, 'error');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initAdminUI();
+            loadAnnouncements();
+        });
+    </script>
+
+<!-- API Debugging Helper -->
+<script>
+    // API Connection Monitor
+    function checkApiConnection() {
+        const api = window.api;
+        if (!api) {
+            console.error('API object not available!');
+            showConnectionError('API object not available');
+            return;
+        }
+        
+        // Test API connection
+        fetch(api.baseURL + \'/dashboard\', {
+            headers: {
+                'Authorization': `Bearer ${api.getToken()}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('API test connection status:', response.status);
+            if (!response.ok) {
+                showConnectionError(`API returned status ${response.status}`);
+            } else {
+                hideConnectionError();
+            }
+            return response.json();
+        })
+        .catch(error => {
+            console.error('API connection test failed:', error);
+            showConnectionError(`Connection failed: ${error.message}`);
+        });
+    }
+    
+    // Show connection error
+    function showConnectionError(message) {
+        let errorEl = document.getElementById('api-connection-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'api-connection-error';
+            errorEl.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fee2e2;
+                color: #b91c1c;
+                padding: 10px 20px;
+                text-align: center;
+                z-index: 9999;
+                font-weight: bold;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            `;
+            document.body.appendChild(errorEl);
+        }
+        
+        errorEl.innerHTML = `
+            ⚠️ Backend connection issue: ${message}
+            <button onclick="location.reload()" style="margin-left: 15px; padding: 3px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Reload
+            </button>
+            <a href="admin-api-test.html" style="margin-left: 10px; color: #b91c1c; text-decoration: underline;">
+                Run Diagnostics
+            </a>
+        `;
+    }
+    
+    // Hide connection error
+    function hideConnectionError() {
+        const errorEl = document.getElementById('api-connection-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    // Check connection when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkApiConnection, 1000);
+    });
+</script>
+
+</body>
+</html>

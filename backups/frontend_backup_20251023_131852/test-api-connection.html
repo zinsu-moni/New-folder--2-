@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test - Affluence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .test-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+        }
+        .warning {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        #config {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        #logs {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Affluence API Connection Diagnostic</h1>
+    <p>This tool helps diagnose API connection issues between the frontend and backend.</p>
+    
+    <div class="test-container">
+        <h2>1. API Configuration</h2>
+        <div id="config">Loading configuration...</div>
+        <button onclick="updateApiBaseManually()">Update API Base URL</button>
+        <button onclick="clearStoredApiBase()">Reset to Default</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>2. Connection Tests</h2>
+        <button onclick="testApiRoot()">Test API Root</button>
+        <button onclick="testApiHealth()">Test Health Endpoint</button>
+        <button onclick="testApiAuth()">Test Authentication</button>
+        <button onclick="testApiAdmin()">Test Admin Access</button>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>3. Debug Logs</h2>
+        <div id="logs"></div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        const api = new AffluenceAPI();
+        const logs = [];
+        
+        function log(message) {
+            const timestamp = new Date().toISOString().substring(11, 19);
+            logs.push(`[${timestamp}] ${message}`);
+            document.getElementById('logs').textContent = logs.join('\n');
+        }
+        
+        // Show API configuration
+        function displayConfig() {
+            const config = {
+                'API Base URL': api.baseURL,
+                'Token Exists': !!api.getToken(),
+                'User Agent': navigator.userAgent,
+                'Frontend URL': window.location.origin,
+                'Browser CORS Support': typeof window.fetch !== 'undefined',
+                'Local Storage Available': !!window.localStorage,
+                'Browser Protocol': window.location.protocol
+            };
+            
+            const configEl = document.getElementById('config');
+            configEl.innerHTML = '';
+            
+            for (const [key, value] of Object.entries(config)) {
+                const item = document.createElement('div');
+                item.innerHTML = `<strong>${key}:</strong> ${value}`;
+                configEl.appendChild(item);
+            }
+        }
+        
+        // Update API base manually
+        function updateApiBaseManually() {
+            const newBase = prompt('Enter the API base URL:', api.baseURL || 'http://localhost:8000/api');
+            if (newBase) {
+                localStorage.setItem('affluence_api_base', newBase);
+                api.baseURL = newBase;
+                log(`API base URL manually updated to: ${newBase}`);
+                displayConfig();
+            }
+        }
+        
+        // Clear stored API base
+        function clearStoredApiBase() {
+            localStorage.removeItem('affluence_api_base');
+            api.baseURL = detectApiBase(); // Call the function again
+            log(`API base URL reset to default: ${api.baseURL}`);
+            displayConfig();
+        }
+        
+        // Test the API root endpoint
+        async function testApiRoot() {
+            const resultsEl = document.getElementById('test-results');
+            const resultEl = document.createElement('div');
+            resultEl.className = 'test-result';
+            
+            try {
+                log(`Testing API root at ${api.baseURL}`);
+                const response = await fetch(api.baseURL);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultEl.classList.add('success');
+                    resultEl.innerHTML = `<strong>API Root:</strong> Success (${response.status})`;
+                    log(`API Root test successful: ${JSON.stringify(data)}`);
+                } else {
+                    resultEl.classList.add('error');
+                    resultEl.innerHTML = `<strong>API Root:</strong> Failed (${response.status}) - ${data.detail || data.message || 'Unknown error'}`;
+                    log(`API Root test failed: ${JSON.stringify(data)}`);
+                }
+            } catch (err) {
+                resultEl.classList.add('error');
+                resultEl.innerHTML = `<strong>API Root:</strong> Connection Failed - ${err.message}`;
+                log(`API Root test exception: ${err.message}`);
+            }
+            
+            resultsEl.appendChild(resultEl);
+        }
+        
+        // Test the health endpoint
+        async function testApiHealth() {
+            const resultsEl = document.getElementById('test-results');
+            const resultEl = document.createElement('div');
+            resultEl.className = 'test-result';
+            
+            try {
+                log(`Testing health endpoint at ${api.baseURL}/health`);
+                const response = await fetch(`${api.baseURL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultEl.classList.add('success');
+                    resultEl.innerHTML = `<strong>Health Check:</strong> Success (${response.status})`;
+                    log(`Health check successful: ${JSON.stringify(data)}`);
+                } else {
+                    resultEl.classList.add('error');
+                    resultEl.innerHTML = `<strong>Health Check:</strong> Failed (${response.status}) - ${data.detail || data.message || 'Unknown error'}`;
+                    log(`Health check failed: ${JSON.stringify(data)}`);
+                }
+            } catch (err) {
+                resultEl.classList.add('error');
+                resultEl.innerHTML = `<strong>Health Check:</strong> Connection Failed - ${err.message}`;
+                log(`Health check exception: ${err.message}`);
+            }
+            
+            resultsEl.appendChild(resultEl);
+        }
+        
+        // Test authentication
+        async function testApiAuth() {
+            const resultsEl = document.getElementById('test-results');
+            const resultEl = document.createElement('div');
+            resultEl.className = 'test-result';
+            
+            try {
+                log(`Testing authentication - token exists: ${!!api.getToken()}`);
+                
+                if (!api.getToken()) {
+                    resultEl.classList.add('warning');
+                    resultEl.innerHTML = `<strong>Authentication:</strong> No token available. Please login first.`;
+                    log(`Authentication test skipped: No token available`);
+                    resultsEl.appendChild(resultEl);
+                    return;
+                }
+                
+                const response = await fetch(`${api.baseURL}/users/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${api.getToken()}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultEl.classList.add('success');
+                    resultEl.innerHTML = `<strong>Authentication:</strong> Success (${response.status}) - User: ${data.username}`;
+                    log(`Authentication test successful: ${JSON.stringify(data)}`);
+                } else {
+                    resultEl.classList.add('error');
+                    resultEl.innerHTML = `<strong>Authentication:</strong> Failed (${response.status}) - ${data.detail || data.message || 'Unknown error'}`;
+                    log(`Authentication test failed: ${JSON.stringify(data)}`);
+                }
+            } catch (err) {
+                resultEl.classList.add('error');
+                resultEl.innerHTML = `<strong>Authentication:</strong> Connection Failed - ${err.message}`;
+                log(`Authentication test exception: ${err.message}`);
+            }
+            
+            resultsEl.appendChild(resultEl);
+        }
+        
+        // Test admin access
+        async function testApiAdmin() {
+            const resultsEl = document.getElementById('test-results');
+            const resultEl = document.createElement('div');
+            resultEl.className = 'test-result';
+            
+            try {
+                log(`Testing admin access - token exists: ${!!api.getToken()}`);
+                
+                if (!api.getToken()) {
+                    resultEl.classList.add('warning');
+                    resultEl.innerHTML = `<strong>Admin Access:</strong> No token available. Please login first.`;
+                    log(`Admin test skipped: No token available`);
+                    resultsEl.appendChild(resultEl);
+                    return;
+                }
+                
+                const response = await fetch(`${api.baseURL}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${api.getToken()}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultEl.classList.add('success');
+                    resultEl.innerHTML = `<strong>Admin Access:</strong> Success (${response.status})`;
+                    log(`Admin test successful: ${JSON.stringify(data)}`);
+                } else {
+                    resultEl.classList.add('error');
+                    resultEl.innerHTML = `<strong>Admin Access:</strong> Failed (${response.status}) - ${data.detail || data.message || 'Unknown error'}`;
+                    log(`Admin test failed: ${JSON.stringify(data)}`);
+                }
+            } catch (err) {
+                resultEl.classList.add('error');
+                resultEl.innerHTML = `<strong>Admin Access:</strong> Connection Failed - ${err.message}`;
+                log(`Admin test exception: ${err.message}`);
+            }
+            
+            resultsEl.appendChild(resultEl);
+        }
+        
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Diagnostic tool initialized');
+            displayConfig();
+        });
+    </script>
+</body>
+</html>

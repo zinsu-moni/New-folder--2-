@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Management - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+    <link rel="stylesheet" href="css/admin-mobile.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="admin-articles.html" class="nav-item active">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Articles</span>
+                    </a>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-cards.html" class="nav-item">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cards</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-logs.html" class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="userName">Admin User</span>
+                        <span class="user-role" id="userRole">Administrator</span>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">Articles</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="showArticleModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Create Article</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="page-description">
+                    Create and manage articles that users can read to earn rewards.
+                </p>
+            </div>
+
+            <div class="content-area">
+                <!-- Filter Controls -->
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="statusFilter">Status:</label>
+                        <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+                            <option value="all">All</option>
+                            <option value="published">Published</option>
+                            <option value="draft">Drafts</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search articles..." onkeyup="applyFilters()">
+                        <button class="search-btn"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+
+                <!-- Articles List -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">All Articles</h2>
+                    </div>
+                    <div id="articlesTable" class="card-body">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Article Modal -->
+    <div id="articleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Create Article</h3>
+                <button class="modal-close" onclick="closeModal('articleModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="articleForm">
+                    <div class="form-group">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" id="title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="summary" class="form-label">Summary</label>
+                        <textarea id="summary" name="summary" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea id="content" name="content" class="form-control" rows="10" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="thumbnail" class="form-label">Thumbnail URL</label>
+                        <input type="text" id="thumbnail" name="thumbnail" class="form-control">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label for="reading_time" class="form-label">Reading Time (minutes)</label>
+                            <input type="number" id="reading_time" name="reading_time" class="form-control" min="1" value="5" required>
+                        </div>
+                        <div class="form-group half">
+                            <label for="earning_amount" class="form-label">Earning Amount (₦)</label>
+                            <input type="number" id="earning_amount" name="earning_amount" class="form-control" min="0" step="0.01" value="100.00" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Publication Status</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="is_published" name="is_published" class="toggle-input">
+                            <label for="is_published" class="toggle-label">
+                                <span class="toggle-inner"></span>
+                                <span class="toggle-switch-label">Publish Immediately</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('articleModal')">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveArticle()">Save Article</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="confirmDeleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete Article</h3>
+                <button class="modal-close" onclick="closeModal('confirmDeleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this article?</p>
+                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                <p id="deleteArticleTitle"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('confirmDeleteModal')">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        // Global variables
+        let articles = [];
+        let currentArticleId = null;
+
+        // Load articles from API
+        async function loadArticles() {
+            try {
+                const table = document.getElementById('articlesTable');
+                table.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+                
+                articles = await adminAPI.getArticles();
+                displayArticles(articles);
+            } catch (error) {
+                console.error('Error loading articles:', error);
+                document.getElementById('articlesTable').innerHTML = `
+                    <div class="empty-state error">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h3>Failed to Load Articles</h3>
+                        <p>${error.message || 'Could not connect to the server'}</p>
+                        <button class="btn btn-primary" onclick="loadArticles()">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Display articles in table
+        function displayArticles(articlesToDisplay) {
+            const table = document.getElementById('articlesTable');
+            
+            if (!articlesToDisplay || articlesToDisplay.length === 0) {
+                table.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <h3>No Articles Found</h3>
+                        <p>Create your first article to start engaging your users</p>
+                        <button class="btn btn-primary" onclick="showArticleModal()">
+                            <i class="fas fa-plus"></i> Create Article
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHtml = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Reading Time</th>
+                            <th>Reward</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${articlesToDisplay.map(article => `
+                            <tr>
+                                <td>
+                                    <div class="item-title">${article.title}</div>
+                                    <div class="item-subtitle">${article.summary ? article.summary.substring(0, 60) + (article.summary.length > 60 ? '...' : '') : 'No summary'}</div>
+                                </td>
+                                <td>${article.reading_time} min</td>
+                                <td>₦${article.earning_amount.toFixed(2)}</td>
+                                <td>
+                                    <span class="badge ${article.is_published ? 'badge-success' : 'badge-warning'}">
+                                        ${article.is_published ? 'Published' : 'Draft'}
+                                    </span>
+                                </td>
+                                <td>${new Date(article.created_at).toLocaleDateString()}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-icon" onclick="editArticle(${article.id})" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon ${article.is_published ? 'warning' : 'success'}" 
+                                                onclick="togglePublishStatus(${article.id}, ${!article.is_published})" 
+                                                title="${article.is_published ? 'Unpublish' : 'Publish'}">
+                                            <i class="fas fa-${article.is_published ? 'eye-slash' : 'eye'}"></i>
+                                        </button>
+                                        <button class="btn-icon danger" onclick="confirmDeleteArticle(${article.id}, '${article.title.replace(/'/g, "\\'")}')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            table.innerHTML = tableHtml;
+        }
+
+        // Filter articles based on search and status filter
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            const filteredArticles = articles.filter(article => {
+                // Apply search filter
+                const matchesSearch = article.title.toLowerCase().includes(searchTerm) || 
+                                     (article.summary && article.summary.toLowerCase().includes(searchTerm));
+                
+                // Apply status filter
+                let matchesStatus = true;
+                if (statusFilter === 'published') {
+                    matchesStatus = article.is_published === true;
+                } else if (statusFilter === 'draft') {
+                    matchesStatus = article.is_published === false;
+                }
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            displayArticles(filteredArticles);
+        }
+
+        // Show article create/edit modal
+        function showArticleModal(isEdit = false) {
+            document.getElementById('modalTitle').textContent = isEdit ? 'Edit Article' : 'Create Article';
+            document.getElementById('articleForm').reset();
+            
+            if (!isEdit) {
+                // Default values for new article
+                document.getElementById('reading_time').value = '5';
+                document.getElementById('earning_amount').value = '100.00';
+                currentArticleId = null;
+            }
+            
+            openModal('articleModal');
+        }
+
+        // Edit article
+        async function editArticle(articleId) {
+            try {
+                currentArticleId = articleId;
+                const article = articles.find(a => a.id === articleId);
+                
+                if (!article) {
+                    showToast('Article not found', 'error');
+                    return;
+                }
+                
+                document.getElementById('title').value = article.title || '';
+                document.getElementById('summary').value = article.summary || '';
+                document.getElementById('content').value = article.content || '';
+                document.getElementById('thumbnail').value = article.thumbnail || '';
+                document.getElementById('reading_time').value = article.reading_time || 5;
+                document.getElementById('earning_amount').value = article.earning_amount || 100;
+                document.getElementById('is_published').checked = article.is_published;
+                
+                showArticleModal(true);
+            } catch (error) {
+                console.error('Error editing article:', error);
+                showToast('Error loading article data', 'error');
+            }
+        }
+
+        // Save article (create or update)
+        async function saveArticle() {
+            try {
+                const formData = {
+                    title: document.getElementById('title').value,
+                    summary: document.getElementById('summary').value,
+                    content: document.getElementById('content').value,
+                    thumbnail: document.getElementById('thumbnail').value,
+                    reading_time: parseInt(document.getElementById('reading_time').value),
+                    earning_amount: parseFloat(document.getElementById('earning_amount').value),
+                    is_published: document.getElementById('is_published').checked
+                };
+
+                if (currentArticleId) {
+                    // Update existing article
+                    await adminAPI.updateArticle(currentArticleId, formData);
+                    showToast('Article updated successfully', 'success');
+                } else {
+                    // Create new article
+                    await adminAPI.createArticle(formData);
+                    showToast('Article created successfully', 'success');
+                }
+
+                closeModal('articleModal');
+                loadArticles();
+            } catch (error) {
+                console.error('Error saving article:', error);
+                showToast(error.message || 'Error saving article', 'error');
+            }
+        }
+
+        // Toggle publish status
+        async function togglePublishStatus(articleId, newStatus) {
+            try {
+                await adminAPI.updateArticle(articleId, { is_published: newStatus });
+                showToast(`Article ${newStatus ? 'published' : 'unpublished'} successfully`, 'success');
+                loadArticles();
+            } catch (error) {
+                console.error('Error updating article status:', error);
+                showToast(error.message || 'Error updating article status', 'error');
+            }
+        }
+
+        // Confirm article deletion
+        function confirmDeleteArticle(articleId, title) {
+            document.getElementById('deleteArticleTitle').textContent = `"${title}"`;
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteArticle(articleId);
+            openModal('confirmDeleteModal');
+        }
+
+        // Delete article
+        async function deleteArticle(articleId) {
+            try {
+                await adminAPI.deleteArticle(articleId);
+                closeModal('confirmDeleteModal');
+                showToast('Article deleted successfully', 'success');
+                loadArticles();
+            } catch (error) {
+                console.error('Error deleting article:', error);
+                showToast(error.message || 'Error deleting article', 'error');
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize admin UI
+            initAdminUI();
+            
+            // Load articles
+            loadArticles();
+        });
+    </script>
+</body>
+</html>

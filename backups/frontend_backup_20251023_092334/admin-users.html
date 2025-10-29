@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item active">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                    <a href="admin-logs.html" class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                    <a href="vendor-lounge.html" class="nav-item" id="vendorMenuItem" style="display: none;">
+                        <i class="fas fa-store"></i>
+                        <span>Vendor Lounge</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">User Management</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openModal('addUserModal')">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Add User</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Filter Users</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Role</label>
+                        <select id="roleFilter" class="form-control">
+                            <option value="">All Roles</option>
+                            <option value="user">User</option>
+                            <option value="subadmin">Sub Admin</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Status</label>
+                        <select id="statusFilter" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Search</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by username or email...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">All Users</h2>
+                    <span id="userCount" style="color: var(--text-light); font-size: 14px;">Loading...</span>
+                </div>
+
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="7">
+                                    <div class="loading">
+                                        <div class="spinner"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New User</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-control">
+                            <option value="user">User</option>
+                            <option value="subadmin">Sub Admin</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
+                <button type="submit" form="addUserForm" class="btn btn-primary">Add User</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        console.log('===== ADMIN USERS SCRIPT LOADED =====');
+        console.log('Window location:', window.location.href);
+        console.log('Scripts loaded - api:', typeof api, 'adminAPI:', typeof adminAPI, 'window.adminAPI:', typeof window.adminAPI);
+        
+        // Fallback: if adminAPI is not defined, create a minimal one
+        if (typeof adminAPI === 'undefined' && typeof window.adminAPI === 'undefined') {
+            console.error('adminAPI not found! Creating fallback...');
+            window.adminAPI = {
+                getUsers: async (skip = 0, limit = 100, role = null) => {
+                    let url = `/admin/users?skip=${skip}&limit=${limit}`;
+                    if (role) url += `&role=${role}`;
+                    console.log('Fallback adminAPI.getUsers calling:', url);
+                    return await api.get(url);
+                },
+                updateUserRole: async (userId, role) => {
+                    return await api.put(`/admin/users/${userId}/role`, { role });
+                },
+                updateUserStatus: async (userId, isActive) => {
+                    return await api.put(`/admin/users/${userId}/status`, { is_active: isActive });
+                },
+                deleteUser: async (userId) => {
+                    return await api.delete(`/admin/users/${userId}`);
+                }
+            };
+            console.log('Fallback adminAPI created');
+        }
+        
+        // Use whichever is available
+        const adminAPI = window.adminAPI || adminAPI;
+        
+        let allUsers = [];
+        let filteredUsers = [];
+
+        // Load users
+        async function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+           
+            // Show loading state
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading users...</td></tr>';
+           
+            try {
+                console.log('=== LOAD USERS START ===');
+                const token = localStorage.getItem('affluence_token');
+                console.log('Token:', token ? 'EXISTS' : 'MISSING');
+               
+                if (!token) {
+                    throw new Error('No authentication token found. Please login again.');
+                }
+                
+                // Try with manual fetch first as a diagnostic
+                console.log('Trying direct fetch first...');
+                // Use the correct path with /admin prefix
+                const manualResponse = await fetch(`${api.baseURL}/admin/users?skip=0&limit=500`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Manual fetch status:', manualResponse.status, manualResponse.statusText);
+                
+                // Now try with adminAPI
+                console.log('Now calling adminAPI.getUsers...');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Fetching from API...</td></tr>';
+               
+                const response = await adminAPI.getUsers(0, 500);
+                console.log('Raw API response:', response);
+                console.log('Response type:', typeof response);
+                console.log('Is array?', Array.isArray(response));
+                
+                // Handle both array and object with users property
+                if (Array.isArray(response)) {
+                    console.log('Response is an array, using directly');
+                    allUsers = response;
+                } else if (response && response.users && Array.isArray(response.users)) {
+                    console.log('Response has users array property');
+                    allUsers = response.users;
+                } else if (response && Array.isArray(response.data)) {
+                    console.log('Response has data array property');
+                    allUsers = response.data;
+                } else if (response && typeof response === 'object') {
+                    console.log('Response is an object, trying to extract users');
+                    // Try to find any array property that might contain users
+                    const arrayProps = Object.entries(response)
+                        .filter(([_, val]) => Array.isArray(val) && val.length > 0)
+                        .sort(([_, a], [_, b]) => b.length - a.length); // Sort by array length
+                    
+                    if (arrayProps.length > 0) {
+                        console.log('Found array property:', arrayProps[0][0]);
+                        allUsers = arrayProps[0][1];
+                    } else {
+                        console.error('No suitable array found in response');
+                        allUsers = [];
+                    }
+                } else {
+                    console.error('Unexpected response format:', response);
+                    allUsers = [];
+                }
+                
+                filteredUsers = allUsers;
+                console.log('Total users loaded:', allUsers.length);
+                console.log('First user sample:', allUsers[0]);
+                
+                renderUsers();
+                updateUserCount();
+                console.log('=== LOAD USERS END ===');
+            } catch (error) {
+                console.error('=== ERROR LOADING USERS ===');
+                console.error('Error object:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                
+                showToast('Failed to load users: ' + error.message, 'error');
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error Loading Users</h3>
+                        <p>${error.message}</p>
+                    </td></tr>
+                `;
+            }
+        }
+
+        // Render users table
+        function renderUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No Users Found</h3>
+                        <p>No users match your filter criteria</p>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredUsers.map(user => `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600;">
+                                ${user.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${user.username}</div>
+                                <div style="font-size: 12px; color: var(--text-light);">ID: ${user.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge badge-${user.role === 'admin' ? 'danger' : user.role === 'subadmin' ? 'warning' : 'primary'}">
+                            ${user.role.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>${user.balance ? formatCurrency(user.balance.total_balance || 0) : '₦0.00'}</td>
+                    <td>
+                        <span class="badge badge-${user.is_active ? 'success' : 'danger'}">
+                            ${user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td style="font-size: 13px;">${formatDate(user.created_at)}</td>
+                    <td>
+                        <div class="action-btns">
+                            ${user.role === 'user' ? `
+                                <button class="btn btn-sm btn-success" onclick="promoteToSubAdmin(${user.id})" title="Promote to Sub Admin">
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                            ` : ''}
+                            ${user.role !== 'admin' ? `
+                                <button class="btn btn-sm btn-${user.is_active ? 'warning' : 'success'}" onclick="toggleUserStatus(${user.id}, ${!user.is_active})" title="${user.is_active ? 'Disable' : 'Enable'}">
+                                    <i class="fas fa-${user.is_active ? 'ban' : 'check'}"></i>
+                                </button>
+                            ` : ''}
+                            ${user.role !== 'admin' ? `
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})" title="Delete User">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update user count
+        function updateUserCount() {
+            document.getElementById('userCount').textContent = `${filteredUsers.length} user(s)`;
+        }
+
+        // Filter users
+        function filterUsers() {
+            const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredUsers = allUsers.filter(user => {
+                const matchesRole = !roleFilter || user.role.toLowerCase() === roleFilter;
+                const matchesStatus = !statusFilter || (statusFilter === 'active' && user.is_active) || (statusFilter === 'inactive' && !user.is_active);
+                const matchesSearch = !searchTerm || user.username.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm);
+                
+                return matchesRole && matchesStatus && matchesSearch;
+            });
+
+            renderUsers();
+            updateUserCount();
+        }
+
+        // Promote to sub admin
+        async function promoteToSubAdmin(userId) {
+            showModal('Promote to Sub Admin', 'Are you sure you want to promote this user to Sub Admin? They will gain vendor lounge access.', async () => {
+                try {
+                    await adminAPI.updateUserRole(userId, 'subadmin');
+                    showToast('User promoted to Sub Admin', 'success');
+                    loadUsers();
+                } catch (error) {
+                    showToast(error.message || 'Failed to promote user', 'error');
+                }
+            });
+        }
+
+        // Toggle user status
+        async function toggleUserStatus(userId, newStatus) {
+            showModal(`${newStatus ? 'Enable' : 'Disable'} User`, `Are you sure you want to ${newStatus ? 'enable' : 'disable'} this user?`, async () => {
+                try {
+                    await adminAPI.updateUserStatus(userId, newStatus);
+                    showToast(`User ${newStatus ? 'enabled' : 'disabled'} successfully`, 'success');
+                    loadUsers();
+                } catch (error) {
+                    showToast(error.message || 'Failed to update user status', 'error');
+                }
+            });
+        }
+
+        // Delete user
+        async function deleteUser(userId) {
+            showModal('Delete User', '<strong style="color: #ef4444;">Warning:</strong> This will permanently delete this user and all their data. This action cannot be undone.', async () => {
+                try {
+                    await adminAPI.deleteUser(userId);
+                    showToast('User deleted successfully', 'success');
+                    loadUsers();
+                } catch (error) {
+                    showToast(error.message || 'Failed to delete user', 'error');
+                }
+            });
+        }
+
+        // Initialize - Using immediate execution to test
+        console.log('Script execution reached initialization section');
+        
+        // Try running immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            console.log('DOM still loading, waiting for DOMContentLoaded...');
+            document.addEventListener('DOMContentLoaded', initPage);
+        } else {
+            console.log('DOM already loaded, running immediately');
+            initPage();
+        }
+        
+        function initPage() {
+            console.log('===== INIT PAGE START =====');
+            console.log('adminAPI available:', typeof adminAPI);
+            console.log('api available:', typeof api);
+            console.log('initAdminUI available:', typeof initAdminUI);
+            
+            try {
+                initAdminUI();
+                console.log('initAdminUI() completed');
+            } catch (e) {
+                console.error('initAdminUI() failed:', e);
+            }
+            
+            // Add event listeners
+            try {
+                document.getElementById('roleFilter').addEventListener('change', filterUsers);
+                document.getElementById('statusFilter').addEventListener('change', filterUsers);
+                document.getElementById('searchInput').addEventListener('input', filterUsers);
+                console.log('Event listeners attached');
+            } catch (e) {
+                console.error('Failed to attach event listeners:', e);
+            }
+            
+            // Function to check API configuration and router setup
+            function checkApiSetup() {
+                console.log('=== API CONFIGURATION CHECK ===');
+                console.log('API Base URL:', api.baseURL);
+                console.log('Admin Router Prefix in backend: /api/admin');
+                console.log('Expected User Endpoint:', api.baseURL + '/admin/users');
+                console.log('Has Token:', !!api.getToken());
+                
+                // Test a direct fetch to diagnose issues
+                fetch(api.baseURL + '/admin/users', {
+                    headers: {
+                        'Authorization': `Bearer ${api.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => {
+                    console.log('Direct API test status:', res.status, res.statusText);
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('Direct API test success. Sample data:', data && data.length > 0 ? data[0] : data);
+                })
+                .catch(err => {
+                    console.error('Direct API test failed:', err);
+                });
+                
+                console.log('=== END API CONFIGURATION CHECK ===');
+            }
+            
+            // Load users - WITH ALERT FOR VISIBILITY
+            console.log('About to call loadUsers()');
+            console.log('Token exists:', !!localStorage.getItem('affluence_token'));
+            console.log('Token value:', localStorage.getItem('affluence_token')?.substring(0, 20) + '...');
+            
+            // Run API configuration check first
+            checkApiSetup();
+            
+            setTimeout(() => {
+                console.log('Calling loadUsers after 100ms delay...');
+                loadUsers().then(() => {
+                    console.log('loadUsers completed');
+                }).catch(err => {
+                    console.error('loadUsers threw error:', err);
+                    alert('Error loading users: ' + err.message);
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>

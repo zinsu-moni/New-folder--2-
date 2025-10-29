@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - Affluence Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin-shared.css">
+    <link rel="stylesheet" href="css/admin-mobile.css">
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-gem"></i>
+                    <span>Affluence</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main</div>
+                    <a href="admin-dashboard.html" class="nav-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-users.html" class="nav-item">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <a href="admin-tasks.html" class="nav-item">
+                        <i class="fas fa-tasks"></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="admin-coupons.html" class="nav-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-withdrawals.html" class="nav-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                    <a href="admin-streaming.html" class="nav-item">
+                        <i class="fas fa-video"></i>
+                        <span>Streaming</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Content</div>
+                    <a href="admin-articles.html" class="nav-item">
+                        <i class="fas fa-newspaper"></i>
+                        <span>Articles</span>
+                    </a>
+                    <a href="admin-cards.html" class="nav-item">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Cards</span>
+                    </a>
+                    <a href="admin-announcements.html" class="nav-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span>Announcements</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <a href="admin-logs.html" class="nav-item active">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>System Logs</span>
+                    </a>
+                    <a href="vendor-lounge.html" class="nav-item" id="vendorMenuItem" style="display: none;">
+                        <i class="fas fa-store"></i>
+                        <span>Vendor Lounge</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <div class="header-top">
+                    <h1 class="page-title">System Logs</h1>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h2 class="card-title">Activity Log</h2>
+                    <div class="filter-controls">
+                        <input type="text" id="searchInput" placeholder="Search logs..." class="form-control">
+                        <select id="filterAction" class="form-control">
+                            <option value="">All Actions</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>Admin</th>
+                                <th>Timestamp</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr>
+                                <td colspan="5">
+                                    <div class="loading"><div class="spinner"></div></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="logsPagination">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div id="logDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Log Details</h3>
+                <button class="modal-close" onclick="closeModal('logDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="logDetailsBody">
+                <!-- Log details will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('logDetailsModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/admin-shared.js"></script>
+    <script>
+        // Global state
+        let currentPage = 0;
+        const PAGE_SIZE = 20;
+        let totalLogs = 0;
+        let allActions = new Set();
+        let logs = [];
+        
+        async function loadLogs(page = 0) {
+            try {
+                const skip = page * PAGE_SIZE;
+                const logsData = await adminAPI.getSystemLogs(skip, PAGE_SIZE);
+                logs = logsData.logs || [];
+                totalLogs = logsData.total || logs.length;
+                
+                const tbody = document.getElementById('logsTableBody');
+                
+                if (!logs.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="5" class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>No System Logs Found</h3>
+                            <p>System activity will be recorded here</p>
+                        </td></tr>
+                    `;
+                    document.getElementById('logsPagination').innerHTML = '';
+                    return;
+                }
+
+                tbody.innerHTML = logs.map(log => {
+                    // Add action to filter options
+                    allActions.add(log.action);
+                    
+                    // Set icon based on action type
+                    let actionIcon = getLogActionIcon(log.action);
+                    
+                    return `
+                        <tr>
+                            <td>
+                                <span class="log-action">
+                                    <i class="${actionIcon}"></i>
+                                    ${formatLogAction(log.action)}
+                                </span>
+                            </td>
+                            <td>${log.description}</td>
+                            <td>${log.admin_username || 'System'}</td>
+                            <td style="font-size: 13px;">${formatDate(log.performed_at)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick='showLogDetails(${JSON.stringify(log)})'>
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Update pagination
+                updatePagination(page);
+                
+                // Update action filter
+                updateActionFilter();
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsTableBody').innerHTML = `
+                    <tr><td colspan="5" class="empty-state error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Error Loading Logs</h3>
+                        <p>${error.message || 'Unknown error occurred'}</p>
+                    </td></tr>
+                `;
+            }
+        }
+
+        function updatePagination(currentPage) {
+            const totalPages = Math.ceil(totalLogs / PAGE_SIZE);
+            
+            if (totalPages <= 1) {
+                document.getElementById('logsPagination').innerHTML = '';
+                return;
+            }
+            
+            let paginationHtml = `
+                <button class="btn btn-sm" 
+                    ${currentPage === 0 ? 'disabled' : ''} 
+                    onclick="loadLogs(0)">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="btn btn-sm" 
+                    ${currentPage === 0 ? 'disabled' : ''} 
+                    onclick="loadLogs(${currentPage - 1})">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <span>Page ${currentPage + 1} of ${totalPages}</span>
+                <button class="btn btn-sm" 
+                    ${currentPage >= totalPages - 1 ? 'disabled' : ''} 
+                    onclick="loadLogs(${currentPage + 1})">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="btn btn-sm" 
+                    ${currentPage >= totalPages - 1 ? 'disabled' : ''} 
+                    onclick="loadLogs(${totalPages - 1})">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            `;
+            
+            document.getElementById('logsPagination').innerHTML = paginationHtml;
+        }
+
+        function updateActionFilter() {
+            const select = document.getElementById('filterAction');
+            
+            // Save current selection
+            const currentSelection = select.value;
+            
+            // Clear options (except first one)
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // Add new options
+            Array.from(allActions).sort().forEach(action => {
+                const option = document.createElement('option');
+                option.value = action;
+                option.textContent = formatLogAction(action);
+                select.appendChild(option);
+            });
+            
+            // Restore selection
+            if (currentSelection) {
+                select.value = currentSelection;
+            }
+        }
+
+        function formatLogAction(action) {
+            return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function getLogActionIcon(action) {
+            const actionIcons = {
+                'login': 'fas fa-sign-in-alt',
+                'logout': 'fas fa-sign-out-alt',
+                'user_updated': 'fas fa-user-edit',
+                'user_deleted': 'fas fa-user-times',
+                'withdrawal_approved': 'fas fa-check-circle',
+                'withdrawal_rejected': 'fas fa-times-circle',
+                'coupon_created': 'fas fa-ticket-alt',
+                'coupon_updated': 'fas fa-edit',
+                'article_created': 'fas fa-file-alt',
+                'announcement_created': 'fas fa-bullhorn',
+                'click_to_earn_updated': 'fas fa-hand-pointer',
+                'default': 'fas fa-clipboard-list'
+            };
+            
+            return actionIcons[action] || actionIcons.default;
+        }
+
+        function showLogDetails(log) {
+            let metadata = '';
+            
+            try {
+                const metadataObj = log.log_metadata ? JSON.parse(log.log_metadata) : null;
+                if (metadataObj) {
+                    metadata = `<div class="json-viewer">${formatJsonForDisplay(metadataObj)}</div>`;
+                }
+            } catch (e) {
+                metadata = `<p>Metadata format error: ${e.message}</p>`;
+            }
+            
+            const content = `
+                <div class="log-details">
+                    <div class="detail-group">
+                        <label>Action:</label>
+                        <div>${formatLogAction(log.action)}</div>
+                    </div>
+                    <div class="detail-group">
+                        <label>Description:</label>
+                        <div>${log.description}</div>
+                    </div>
+                    <div class="detail-group">
+                        <label>Performed By:</label>
+                        <div>${log.admin_username || 'System'} (ID: ${log.performed_by || 'N/A'})</div>
+                    </div>
+                    <div class="detail-group">
+                        <label>Timestamp:</label>
+                        <div>${formatDate(log.performed_at, true)}</div>
+                    </div>
+                    ${metadata ? `<div class="detail-group"><label>Metadata:</label>${metadata}</div>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('logDetailsBody').innerHTML = content;
+            openModal('logDetailsModal');
+        }
+
+        function filterLogs() {
+            const searchValue = document.getElementById('searchInput').value.toLowerCase();
+            const actionFilter = document.getElementById('filterAction').value;
+            
+            // If we have no logs loaded, nothing to filter
+            if (!logs || !logs.length) return;
+            
+            const tbody = document.getElementById('logsTableBody');
+            
+            // Filter logs
+            const filteredLogs = logs.filter(log => {
+                const matchesSearch = searchValue === '' || 
+                    log.description.toLowerCase().includes(searchValue) || 
+                    (log.admin_username && log.admin_username.toLowerCase().includes(searchValue)) ||
+                    log.action.toLowerCase().includes(searchValue);
+                    
+                const matchesAction = actionFilter === '' || log.action === actionFilter;
+                
+                return matchesSearch && matchesAction;
+            });
+            
+            if (filteredLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="5" class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No Matching Logs</h3>
+                        <p>Try adjusting your search criteria</p>
+                    </td></tr>
+                `;
+                return;
+            }
+            
+            // Render filtered logs
+            tbody.innerHTML = filteredLogs.map(log => {
+                let actionIcon = getLogActionIcon(log.action);
+                
+                return `
+                    <tr>
+                        <td>
+                            <span class="log-action">
+                                <i class="${actionIcon}"></i>
+                                ${formatLogAction(log.action)}
+                            </span>
+                        </td>
+                        <td>${log.description}</td>
+                        <td>${log.admin_username || 'System'}</td>
+                        <td style="font-size: 13px;">${formatDate(log.performed_at)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick='showLogDetails(${JSON.stringify(log)})'>
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatJsonForDisplay(obj) {
+            if (!obj) return '';
+            
+            const html = [];
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const value = obj[key];
+                    html.push(`
+                        <div class="json-item">
+                            <span class="json-key">${key}:</span>
+                            <span class="json-value">${typeof value === 'object' ? formatJsonForDisplay(value) : escapeHtml(value)}</span>
+                        </div>
+                    `);
+                }
+            }
+            
+            return html.join('');
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe?.toString().replace(/[&<"']/g, function(m) {
+                switch (m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '"': return '&quot;';
+                    default: return '&#039;';
+                }
+            }) || '';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initAdminUI();
+            loadLogs();
+            
+            // Setup search filter
+            document.getElementById('searchInput').addEventListener('input', filterLogs);
+            document.getElementById('filterAction').addEventListener('change', filterLogs);
+        });
+    </script>
+</body>
+</html>

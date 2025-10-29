@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Streaming - Affluence</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #3b82f6;
+            --light-blue: #60a5fa;
+            --dark-blue: #1e3a8a;
+            --blue-gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --white-gradient: linear-gradient(135deg, #ffffff, #eff6ff);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #1e293b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+        
+        /* Dark Mode */
+        body[data-theme="dark"] {
+            --white-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #e2e8f0;
+        }
+        
+        body[data-theme="dark"]::before {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--white-gradient);
+            color: var(--text-color);
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(239, 246, 255, 0.95));
+            z-index: -1;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: var(--blue-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+        }
+        
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .menu-item:hover {
+            background: rgba(37, 99, 235, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .menu-item.active {
+            background: rgba(37, 99, 235, 0.15);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .menu-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            border-radius: 8px;
+            color: white;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .menu-text {
+            white-space: nowrap;
+        }
+        
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .logo {
+            display: none;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--primary-color);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--primary-color);
+            margin: 3px 0;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Stream Container */
+        .stream-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .stream-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .stream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
+        }
+        
+        .stream-card h3 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        /* Audio Item Styles */
+        .audio-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .audio-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
+        }
+        
+        .audio-info {
+            flex: 1;
+        }
+        
+        .audio-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .audio-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--blue-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .audio-remark {
+            color: rgba(30, 41, 59, 0.7);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .audio-type {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        
+        .audio-actions {
+            margin-left: 20px;
+        }
+        
+        .btn-stream {
+            background: var(--blue-gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-stream:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-stream:disabled {
+            background: rgba(0, 0, 0, 0.3);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Empty State */
+        .empty-audio {
+            text-align: center;
+            padding: 40px;
+            color: rgba(30, 41, 59, 0.6);
+        }
+        
+        .empty-audio i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        /* History Section */
+        .history-section {
+            margin-top: 40px;
+        }
+        
+        .history-title {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+        }
+        
+        .history-table th,
+        .history-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .history-table th {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .history-table tr:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+        
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .no-history {
+            text-align: center;
+            padding: 40px;
+            color: rgba(30, 41, 59, 0.6);
+            font-style: italic;
+        }
+        
+        /* Locked Screen Styles */
+        .locked-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--blue-gradient);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .locked-screen.active {
+            display: flex;
+        }
+        
+        .lock-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .site-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .audio-name-display {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .music-player {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .vinyl-record {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #1e3a8a 25%, #1e40af 25%, #1e40af 50%, #1e3a8a 50%, #1e3a8a 75%, #1e40af 75%, #1e40af);
+            background-size: 20px 20px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            animation: spin 3s linear infinite paused;
+        }
+        
+        .vinyl-record.playing {
+            animation-play-state: running;
+        }
+        
+        .vinyl-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 700;
+            font-size: 24px;
+        }
+        
+        .progress-container {
+            width: 80%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .claim-button {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        
+        .claim-button.visible {
+            display: block;
+        }
+        
+        .claim-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 15px;
+                padding-bottom: 80px;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+            }
+            
+            .hamburger {
+                display: flex;
+            }
+            
+            .stream-card {
+                padding: 20px;
+            }
+            
+            .audio-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .audio-actions {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+            
+            .bottom-nav {
+                display: block;
+            }
+            
+            .music-player {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .vinyl-center {
+                width: 60px;
+                height: 60px;
+                font-size: 18px;
+            }
+            
+            .progress-container,
+            .time-display {
+                width: 90%;
+            }
+            
+            .history-table {
+                font-size: 0.9rem;
+            }
+            
+            .history-table th,
+            .history-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo-section">
+            <div class="logo">Affluence</div>
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <nav>
+            <a href="dashboard.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span class="menu-text">Dashboard</span>
+            </a>
+            
+            <a href="top-earners.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <span class="menu-text">Top Earners</span>
+            </a>
+            
+            <a href="tasks.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <span class="menu-text">Tasks</span>
+            </a>
+            
+            <a href="streaming.html" class="menu-item active">
+                <div class="menu-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <span class="menu-text">Music Streaming</span>
+            </a>
+            
+            <a href="loans.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <span class="menu-text">User Loans</span>
+            </a>
+            
+            <a href="profile.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-user-cog"></i>
+                </div>
+                <span class="menu-text">Profile Settings</span>
+            </a>
+            
+            <a href="withdraw.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <span class="menu-text">Withdrawal</span>
+            </a>
+            
+            <a href="index.html" class="menu-item">
+                <div class="menu-icon">
+                    <i class="fas fa-sign-out-alt"></i>
+                </div>
+                <span class="menu-text">Log Out</span>
+            </a>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="hamburger" onclick="toggleSidebar()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <h1 class="page-title"><i class="fas fa-music"></i> Music Streaming</h1>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="stream-container">
+            <!-- Available Audio Section -->
+            <div class="stream-card">
+                <h3>Available Audio to Stream & Earn</h3>
+                
+                <!-- Sample Audio Items -->
+                <div class="audio-item">
+                    <div class="audio-info">
+                        <div class="audio-title">Relaxation Sounds</div>
+                        <div class="audio-amount">₦5,000</div>
+                        <div class="audio-type">MP3</div>
+                        <div class="audio-remark">Stream for 5 minutes to earn rewards</div>
+                    </div>
+                    <div class="audio-actions">
+                        <button class="btn-stream" data-song-id="1" data-song-name="Relaxation Sounds" data-song-duration="300">
+                            <i class="fas fa-play"></i> Stream & Earn
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="audio-item">
+                    <div class="audio-info">
+                        <div class="audio-title">Motivational Podcast</div>
+                        <div class="audio-amount">₦3,500</div>
+                        <div class="audio-type">MP3</div>
+                        <div class="audio-remark">Complete listening to claim earnings</div>
+                    </div>
+                    <div class="audio-actions">
+                        <button class="btn-stream" data-song-id="2" data-song-name="Motivational Podcast" data-song-duration="240">
+                            <i class="fas fa-play"></i> Stream & Earn
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="audio-item">
+                    <div class="audio-info">
+                        <div class="audio-title">Focus Music</div>
+                        <div class="audio-amount">₦4,200</div>
+                        <div class="audio-type">MP3</div>
+                        <div class="audio-remark">Background music for productivity</div>
+                    </div>
+                    <div class="audio-actions">
+                        <button class="btn-stream" data-song-id="3" data-song-name="Focus Music" data-song-duration="360">
+                            <i class="fas fa-play"></i> Stream & Earn
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Empty state (hidden by default) -->
+                <div class="empty-audio" style="display: none;">
+                    <i class="fas fa-music"></i>
+                    <p>No audio available at the moment.</p>
+                    <p style="font-size: 0.9rem;">Check back later for new streaming opportunities!</p>
+                </div>
+            </div>
+            
+            <!-- Stream History Section -->
+            <div class="history-section">
+                <h3 class="history-title"><i class="fas fa-history"></i> Your Stream History</h3>
+                
+                <div class="stream-card">
+                    <div class="no-history">
+                        <i class="fas fa-headphones" style="font-size: 48px; color: rgba(37, 99, 235, 0.3); margin-bottom: 10px; display: block;"></i>
+                        <p>No stream history found. Start streaming to earn rewards!</p>
+                    </div>
+                    
+                    <!-- Example table structure (hidden by default) -->
+                    <table class="history-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Audio Title</th>
+                                <th>Duration</th>
+                                <th>Earned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>2024-01-15</td>
+                                <td>Relaxation Sounds</td>
+                                <td>5:00</td>
+                                <td>₦5,000</td>
+                            </tr>
+                            <tr>
+                                <td>2024-01-14</td>
+                                <td>Motivational Podcast</td>
+                                <td>4:00</td>
+                                <td>₦3,500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Locked Screen for Streaming -->
+    <div class="locked-screen" id="lockedScreen">
+        <div class="lock-header">
+            <div class="site-name">Affluence</div>
+            <div class="audio-name-display" id="lockedAudioName">Audio Title</div>
+        </div>
+        
+        <div class="music-player">
+            <div class="vinyl-record" id="vinylRecord">
+                <div class="vinyl-center">
+                    <i class="fas fa-music"></i>
+                </div>
+            </div>
+        </div>
+        
+        <audio id="audioPlayer" style="display: none;">
+            <!-- Demo audio source - replace with actual audio file -->
+            <source src="demo-audio.mp3" type="audio/mpeg">
+        </audio>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="time-display">
+            <span id="currentTime">0:00</span>
+            <span id="duration">0:00</span>
+        </div>
+        
+        <button class="claim-button" id="claimButton">
+            <i class="fas fa-gift"></i> Claim Earnings
+        </button>
+    </div>
+    
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const currentTheme = body.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                body.removeAttribute('data-theme');
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeIcon.className = 'fas fa-sun';
+            }
+        });
+        
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+            }
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const hamburger = document.querySelector('.hamburger');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !hamburger.contains(event.target) &&
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+        
+        // Music Streaming Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const streamButtons = document.querySelectorAll('.btn-stream');
+            const lockedScreen = document.getElementById('lockedScreen');
+            const lockedAudioName = document.getElementById('lockedAudioName');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const vinylRecord = document.getElementById('vinylRecord');
+            const progressBar = document.getElementById('progressBar');
+            const currentTimeElement = document.getElementById('currentTime');
+            const durationElement = document.getElementById('duration');
+            const claimButton = document.getElementById('claimButton');
+            
+            let currentSongId = null;
+            let currentSongAmount = null;
+            let streamDuration = 0;
+            
+            streamButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const songId = this.getAttribute('data-song-id');
+                    const songName = this.getAttribute('data-song-name');
+                    const duration = parseInt(this.getAttribute('data-song-duration')); // in seconds
+                    
+                    // Get the amount from the audio item
+                    const audioItem = this.closest('.audio-item');
+                    const amountText = audioItem.querySelector('.audio-amount').textContent;
+                    currentSongAmount = amountText;
+                    
+                    // Set up the locked screen
+                    lockedAudioName.textContent = songName;
+                    currentSongId = songId;
+                    streamDuration = duration;
+                    
+                    // Show the locked screen
+                    lockedScreen.classList.add('active');
+                    
+                    // Start simulated streaming
+                    startStreaming(duration);
+                });
+            });
+            
+            function startStreaming(duration) {
+                vinylRecord.classList.add('playing');
+                durationElement.textContent = formatTime(duration);
+                
+                let currentTime = 0;
+                
+                const interval = setInterval(() => {
+                    currentTime++;
+                    
+                    const progress = (currentTime / duration) * 100;
+                    progressBar.style.width = progress + '%';
+                    currentTimeElement.textContent = formatTime(currentTime);
+                    
+                    if (currentTime >= duration) {
+                        clearInterval(interval);
+                        vinylRecord.classList.remove('playing');
+                        claimButton.classList.add('visible');
+                    }
+                }, 1000);
+                
+                // Store interval ID for cleanup
+                lockedScreen.dataset.intervalId = interval;
+            }
+            
+            // Claim button handler
+            claimButton.addEventListener('click', function() {
+                alert(`Congratulations! You've earned ${currentSongAmount}\n\nYour earnings have been added to your account.`);
+                
+                // Clear interval if still running
+                if (lockedScreen.dataset.intervalId) {
+                    clearInterval(parseInt(lockedScreen.dataset.intervalId));
+                }
+                
+                // Reset and close locked screen
+                lockedScreen.classList.remove('active');
+                claimButton.classList.remove('visible');
+                vinylRecord.classList.remove('playing');
+                progressBar.style.width = '0%';
+                currentTimeElement.textContent = '0:00';
+            });
+            
+            // Format time helper function
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return minutes + ':' + (remainingSeconds < 10 ? '0' : '') + remainingSeconds;
+            }
+            
+            // Prevent leaving the page while streaming
+            window.addEventListener('beforeunload', function(e) {
+                if (lockedScreen.classList.contains('active') && !claimButton.classList.contains('visible')) {
+                    e.preventDefault();
+                    e.returnValue = 'You are currently streaming. Are you sure you want to leave?';
+                    return e.returnValue;
+                }
+            });
+            
+            // Prevent context menu and certain keyboard shortcuts while locked
+            document.addEventListener('contextmenu', function(e) {
+                if (lockedScreen.classList.contains('active')) {
+                    e.preventDefault();
+                }
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (lockedScreen.classList.contains('active')) {
+                    // Block F5, Ctrl+R, Ctrl+W, etc.
+                    if ((e.keyCode === 116) || // F5
+                        (e.ctrlKey && e.keyCode === 82) || // Ctrl+R
+                        (e.ctrlKey && e.keyCode === 87)) { // Ctrl+W
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+            } else {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+            }
+        });
+    </script>
+
+    <!-- API Scripts -->
+    <script src="js/api.js"></script>
+    <script>
+        // Create API instance
+        const api = new AffluenceAPI();
+        
+        // Check authentication
+        if (!api.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+    </script>
+    <script src="js/streaming.js"></script>
+</body>
+</html>

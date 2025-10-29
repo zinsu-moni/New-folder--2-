@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Affluence</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #ffffff;
+            --accent-color: #1e40af;
+            --light-blue: #3b82f6;
+            --dark-blue: #1e3a8a;
+            --blue-gradient: linear-gradient(135deg, var(--primary-color), var(--dark-blue));
+            --white-gradient: linear-gradient(135deg, var(--secondary-color), #eff6ff);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(37, 99, 235, 0.2);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #1e293b;
+            --card-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #3b82f6;
+            --secondary-color: #1e293b;
+            --accent-color: #60a5fa;
+            --light-blue: #60a5fa;
+            --dark-blue: #1e40af;
+            --blue-gradient: linear-gradient(135deg, var(--primary-color), var(--dark-blue));
+            --white-gradient: linear-gradient(135deg, #1e293b, #0f172a);
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --card-border: rgba(59, 130, 246, 0.3);
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --glass-border: rgba(59, 130, 246, 0.2);
+            --text-color: #f1f5f9;
+            --card-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', Arial, sans-serif;
+            background: var(--white-gradient);
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--glass-border);
+            padding: 20px;
+            overflow-y: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-toggle {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .menu-toggle:hover {
+            transform: rotate(90deg);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .menu-toggle i {
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed .menu-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .menu-heading {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 20px 0 10px 15px;
+            text-transform: uppercase;
+        }
+
+        .menu-item {
+            margin-bottom: 5px;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-link:hover,
+        .menu-link.active {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .menu-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 12px;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .menu-text {
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed .menu-text,
+        .sidebar.collapsed .menu-heading {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            padding: 0;
+            transition: margin-left 0.3s;
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .hamburger {
+            width: 20px;
+            height: 14px;
+            position: relative;
+            margin: auto;
+            transform: rotate(0deg);
+            transition: 0.5s ease-in-out;
+        }
+
+        .hamburger span {
+            display: block;
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: white;
+            border-radius: 2px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: 0.25s ease-in-out;
+        }
+
+        .hamburger span:nth-child(1) {
+            top: 0px;
+        }
+
+        .hamburger span:nth-child(2) {
+            top: 6px;
+        }
+
+        .hamburger span:nth-child(3) {
+            top: 12px;
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(1) {
+            top: 6px;
+            transform: rotate(135deg);
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(2) {
+            opacity: 0;
+            left: -20px;
+        }
+
+        .mobile-toggle.active .hamburger span:nth-child(3) {
+            top: 6px;
+            transform: rotate(-135deg);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle-btn {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            color: var(--text-color);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: var(--blue-gradient);
+            padding: 30px;
+            color: white;
+        }
+
+        .user-welcome {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Container */
+        .container {
+            padding: 30px;
+            padding-bottom: 100px;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: var(--blue-gradient);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .balance-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .balance-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .balance-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.2);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .stat-sub-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: "";
+            flex-grow: 1;
+            height: 2px;
+            background: var(--card-border);
+        }
+
+        /* Earning Methods */
+        .earning-methods {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .earning-method {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .earning-method:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .method-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+        }
+
+        .method-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* Referral Card */
+        .referral-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            margin-bottom: 25px;
+        }
+
+        .referral-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .referral-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .referral-input {
+            flex-grow: 1;
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 14px;
+            color: var(--text-color);
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+
+        .copy-btn {
+            background: var(--blue-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Community Card */
+        .community-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        .community-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .social-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #64748b;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .social-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 20px;
+        }
+
+        .social-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item:hover {
+            color: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .nav-item i {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            padding: 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .bonus-breakdown {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .bonus-item {
+            text-align: center;
+        }
+
+        .bonus-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .bonus-label {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+        }
+
+        .btn-close-modal {
+            background: var(--blue-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .earning-methods {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .referral-input-group {
+                flex-direction: column;
+            }
+
+            .copy-btn {
+                justify-content: center;
+            }
+
+            .theme-toggle-btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .earning-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <span>Affluence</span>
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li class="menu-item">
+                <a href="dashboard.html" class="menu-link active">
+                    <div class="menu-icon"><i class="fas fa-home"></i></div>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+            </li>
+
+            <li class="menu-heading">MENU</li>
+
+            <li class="menu-item">
+                <a href="top-earners.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-trophy"></i></div>
+                    <span class="menu-text">Top Earners</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="tasks.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-tasks"></i></div>
+                    <span class="menu-text">Tasks</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="streaming.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-music"></i></div>
+                    <span class="menu-text">Music Streaming</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="loans.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-wallet"></i></div>
+                    <span class="menu-text">User Loans</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="profile.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-cog"></i></div>
+                    <span class="menu-text">Profile Settings</span>
+                </a>
+            </li>
+
+            <!-- Vendor Lounge - Only for Subadmins -->
+            <li class="menu-item" id="vendorLoungeMenuItem" style="display: none;">
+                <a href="vendor-lounge.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-store"></i></div>
+                    <span class="menu-text">Vendor Lounge</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="index.html" class="menu-link">
+                    <div class="menu-icon"><i class="fas fa-sign-out-alt"></i></div>
+                    <span class="menu-text">Log Out</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileSidebar()">
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+                <div class="logo" style="margin: 0;">Affluence</div>
+            </div>
+
+            <div class="header-right">
+                <button class="theme-toggle-btn" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙 Dark</span>
+                </button>
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="user-welcome">
+                <div>
+                    <div class="welcome-text">Welcome back, <span class="user-name">User</span></div>
+                    <div class="username-display" style="font-size: 14px; opacity: 0.9; margin-top: 5px;">@username</div>
+                </div>
+                <div class="user-avatar">U</div>
+            </div>
+        </div>
+
+        <!-- Container -->
+        <div class="container">
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-amount" id="totalBalance">₦0</div>
+                <div class="balance-actions">
+                    <button class="balance-btn" onclick="showBalanceDetails()">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                    <a href="withdraw.html" class="balance-btn">
+                        <i class="fas fa-arrow-down"></i> Withdraw
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-label">Affiliate Balance</div>
+                    <div class="stat-sub-label">(Referral Income)</div>
+                    <div class="stat-value" id="referralBalance">₦0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-label">Activity Balance</div>
+                    <div class="stat-sub-label">(Tasks & Streaming)</div>
+                    <div class="stat-value" id="activityBalance">₦0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-sack-dollar"></i>
+                    </div>
+                    <div class="stat-label">Total Earned</div>
+                    <div class="stat-value" id="totalEarned">₦0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-label">Completed Tasks</div>
+                    <div class="stat-value" id="totalTasks">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-friends"></i>
+                    </div>
+                    <div class="stat-label">Total Referrals</div>
+                    <div class="stat-value" id="totalReferrals">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-label">Pending Withdrawals</div>
+                    <div class="stat-value" id="pendingWithdrawals">0</div>
+                </div>
+            </div>
+
+            <!-- Earning Methods -->
+            <div class="section-title">
+                <i class="fas fa-coins"></i> Earning Methods
+            </div>
+            <div class="earning-methods">
+                <a href="loans.html" class="earning-method">
+                    <div class="method-icon">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <div class="method-name">Loan System</div>
+                </a>
+                <a href="tasks.html" class="earning-method">
+                    <div class="method-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="method-name">Task Performance</div>
+                </a>
+                <a href="top-earners.html" class="earning-method">
+                    <div class="method-icon">
+                        <i class="fas fa-share-alt"></i>
+                    </div>
+                    <div class="method-name">Monetize Social Media</div>
+                </a>
+                <a href="streaming.html" class="earning-method">
+                    <div class="method-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <div class="method-name">Stream & Earn</div>
+                </a>
+            </div>
+
+            <!-- Referral Card -->
+            <div class="referral-card">
+                <div class="referral-title">
+                    <i class="fas fa-gift"></i> Your Referral Link
+                </div>
+                <div class="referral-input-group">
+                    <input type="text" id="referralLink" class="referral-input" value="" readonly>
+                    <button id="copyBtn" class="copy-btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <div style="margin-top:8px; font-size:13px; color:#334155;">
+                    Total referrals: <strong id="referralCount">0</strong>
+                </div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 10px;">
+                    Share with friends and earn ₦500 for each referral
+                </div>
+            </div>
+
+            <!-- Community Card -->
+            <div class="community-card">
+                <div class="community-title">
+                    <i class="fas fa-users"></i> Join Our Community
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-link" target="_blank">
+                        <div class="social-icon">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <span class="social-name">WhatsApp</span>
+                    </a>
+                    <a href="#" class="social-link" target="_blank">
+                        <div class="social-icon">
+                            <i class="fab fa-telegram"></i>
+                        </div>
+                        <span class="social-name">Telegram</span>
+                    </a>
+                    <a href="#" class="social-link" target="_blank">
+                        <div class="social-icon">
+                            <i class="fab fa-facebook"></i>
+                        </div>
+                        <span class="social-name">Facebook</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                © 2025 Affluence. All Rights Reserved.
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="tasks.html" class="nav-item">
+            <i class="fas fa-tasks"></i>
+            <span>Tasks</span>
+        </a>
+        <a href="withdraw.html" class="nav-item">
+            <i class="fas fa-arrow-down"></i>
+            <span>Withdraw</span>
+        </a>
+        <a href="profile.html" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+
+    <!-- Balance Details Modal -->
+    <div class="modal" id="balanceModal">
+        <div class="modal-content">
+            <div class="modal-header">Earnings Breakdown</div>
+            <div class="bonus-breakdown">
+                <div class="bonus-item">
+                    <div class="bonus-amount" id="modalReferralAmount">₦0.00</div>
+                    <div class="bonus-label">Affiliate Balance</div>
+                </div>
+                <div class="bonus-item">
+                    <div class="bonus-amount" id="modalActivityAmount">₦0.00</div>
+                    <div class="bonus-label">Activity Balance</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close-modal" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const themeIcon = document.getElementById('themeIcon');
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            themeIcon.textContent = newTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            const themeIcon = document.getElementById('themeIcon');
+            
+            document.body.setAttribute('data-theme', savedTheme);
+            themeIcon.textContent = savedTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        // Mobile Sidebar Toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileToggle');
+            
+            sidebar.classList.toggle('mobile-open');
+            mobileToggle.classList.toggle('active');
+        }
+
+        // Copy Referral Link
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const linkInput = document.getElementById('referralLink');
+            linkInput.select();
+            navigator.clipboard.writeText(linkInput.value)
+                .then(() => {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                });
+        });
+
+        // Show Balance Details Modal
+        function showBalanceDetails() {
+            document.getElementById('balanceModal').classList.add('show');
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('balanceModal').classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('balanceModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const mobileToggle = document.getElementById('mobileToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !mobileToggle.contains(e.target) &&
+                sidebar.classList.contains('mobile-open')) {
+                sidebar.classList.remove('mobile-open');
+                mobileToggle.classList.remove('active');
+            }
+        });
+
+        // Close mobile sidebar when clicking menu items
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    const sidebar = document.getElementById('sidebar');
+                    const mobileToggle = document.getElementById('mobileToggle');
+                    sidebar.classList.remove('mobile-open');
+                    mobileToggle.classList.remove('active');
+                }
+            });
+        });
+
+        // Initialize
+        loadTheme();
+
+        // Check if impersonating (admin logged in as user)
+        if (sessionStorage.getItem('admin_return_token')) {
+            // Create return to admin banner
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                padding: 12px 20px;
+                text-align: center;
+                font-weight: 600;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            `;
+            banner.innerHTML = `
+                <i class="fas fa-user-secret"></i> Admin Impersonation Mode
+                <button onclick="returnToAdmin()" style="
+                    margin-left: 15px;
+                    padding: 6px 16px;
+                    background: white;
+                    color: #d97706;
+                    border: none;
+                    border-radius: 6px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    font-size: 13px;
+                ">
+                    <i class="fas fa-arrow-left"></i> Return to Admin Panel
+                </button>
+            `;
+            document.body.insertBefore(banner, document.body.firstChild);
+            
+            // Adjust body padding for banner
+            document.body.style.paddingTop = '50px';
+        }
+
+        function returnToAdmin() {
+            const adminToken = sessionStorage.getItem('admin_return_token');
+            if (adminToken) {
+                localStorage.setItem('affluence_token', adminToken);
+                sessionStorage.removeItem('admin_return_token');
+                window.location.href = '/admin-users.html';
+            }
+        }
+    </script>
+
+    <!-- API Scripts -->
+    <script src="js/api.js"></script>
+    <script>
+        // Create API instance
+        const api = new AffluenceAPI();
+        
+        // Make it globally available
+        window.api = api;
+        
+        // Check authentication
+        if (!api.isAuthenticated()) {
+            window.location.href = '/login.html';
+        }
+    </script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/bonus-tracker.js"></script>
+</body>
+</html>
