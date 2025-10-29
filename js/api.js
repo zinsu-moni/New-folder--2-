@@ -38,10 +38,10 @@ function detectApiBase() {
     // 4) Default to your hosted backend (can still be overridden via meta tag or localStorage)
     console.log("[api.js] Using default hosted API base URL");
     // Include /api in the base URL since it's part of the backend router prefix
-    return 'https://affluence-backends-noae.vercel.app/api';
+    return 'https://affluence-backends-noae.vercel.app/ai';
     } catch (e) {
         console.error('[api.js] API base detection failed:', e);
-        return 'https://affluence-backends-noae.vercel.app/api';
+        return 'https://affluence-backends-noae.vercel.app/ai';
     }
 }
 
